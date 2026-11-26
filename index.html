@@ -1,0 +1,1911 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Sotopia-Indic — Phase 1 Evaluation Dashboard</title>
+
+  <!-- Google Font: Inter -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+
+  <!-- Tailwind CSS via CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Inter', 'system-ui', 'sans-serif'],
+          },
+          colors: {
+            western: '#312E81',
+            indic: '#C2410C',
+            human: '#0F766E',
+            alert: '#DC2626',
+          },
+        },
+      },
+    };
+  </script>
+
+  <!-- Chart.js via CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
+</head>
+<body class="bg-slate-50 text-slate-900 font-sans antialiased selection:bg-indigo-100 selection:text-indigo-900">
+
+  <!-- ==================== STICKY HEADER & NAVIGATION ==================== -->
+  <header class="sticky top-0 z-30 bg-white/95 backdrop-blur border-b border-slate-200 shadow-sm">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-4 pb-3">
+      <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-3">
+        <div>
+          <div class="flex flex-wrap items-center gap-2 mb-1">
+            <span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-indigo-50 border border-indigo-200 text-western text-[11px] font-bold tracking-wide uppercase">
+              <span class="w-2 h-2 rounded-full bg-indic"></span>
+              n = 25 Raters &nbsp;|&nbsp; 100 Evaluations &nbsp;|&nbsp; qwen2.5:3b Judge
+            </span>
+            <span class="hidden sm:inline-flex items-center gap-3 text-[11px] font-medium text-slate-500 ml-1">
+              <span class="flex items-center gap-1"><span class="w-2.5 h-2.5 rounded-sm bg-western"></span>Western</span>
+              <span class="flex items-center gap-1"><span class="w-2.5 h-2.5 rounded-sm bg-indic"></span>Indic</span>
+              <span class="flex items-center gap-1"><span class="w-2.5 h-2.5 rounded-sm bg-human"></span>Humans</span>
+              <span class="flex items-center gap-1"><span class="w-2.5 h-2.5 rounded-sm bg-alert"></span>Bias / Alert</span>
+            </span>
+          </div>
+          <h1 class="text-xl sm:text-2xl font-extrabold tracking-tight text-slate-900">
+            Sotopia-Indic — Phase 1 Evaluation Dashboard
+          </h1>
+          <p class="text-xs sm:text-sm text-slate-500">
+            Cross-Cultural LLM Social Negotiation Benchmark &bull; Phase 1 Hypothesis Testing Results
+          </p>
+        </div>
+
+        <!-- Plain Show All Sections / Tabbed View Toggle -->
+        <div class="flex items-center gap-2 shrink-0">
+          <button
+            type="button"
+            id="toggleAllBtn"
+            onclick="toggleAllSections()"
+            class="inline-flex items-center gap-2 whitespace-nowrap px-4 py-2.5 rounded-xl text-xs sm:text-sm font-bold border-2 border-western text-western bg-indigo-50/70 hover:bg-western hover:text-white shadow-sm transition-all cursor-pointer"
+          >
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h16M4 18h16" />
+            </svg>
+            <span id="toggleAllLabel">Show All Sections</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Navigation Tabs -->
+      <nav class="mt-3 pt-3 border-t border-slate-100 overflow-x-auto" role="tablist" aria-label="Evaluation Sections">
+        <div class="flex items-center gap-1.5 sm:gap-2 min-w-max">
+          <button type="button" data-tab="tabOverview" onclick="switchTab('tabOverview')" class="tab-btn whitespace-nowrap px-3.5 py-2 rounded-xl text-xs sm:text-sm font-semibold transition-all cursor-pointer bg-western text-white shadow-sm">
+            Overview &amp; Conclusion
+          </button>
+          <button type="button" data-tab="tab1" onclick="switchTab('tab1')" class="tab-btn whitespace-nowrap px-3.5 py-2 rounded-xl text-xs sm:text-sm font-semibold transition-all cursor-pointer text-slate-600 hover:bg-slate-100 hover:text-slate-900">
+            Test 1: Agreement
+          </button>
+          <button type="button" data-tab="tab2" onclick="switchTab('tab2')" class="tab-btn whitespace-nowrap px-3.5 py-2 rounded-xl text-xs sm:text-sm font-semibold transition-all cursor-pointer text-slate-600 hover:bg-slate-100 hover:text-slate-900">
+            Test 2: Judge Bias
+          </button>
+          <button type="button" data-tab="tab3" onclick="switchTab('tab3')" class="tab-btn whitespace-nowrap px-3.5 py-2 rounded-xl text-xs sm:text-sm font-semibold transition-all cursor-pointer text-slate-600 hover:bg-slate-100 hover:text-slate-900">
+            Test 3: Cultural Gap
+          </button>
+          <button type="button" data-tab="tab4" onclick="switchTab('tab4')" class="tab-btn whitespace-nowrap px-3.5 py-2 rounded-xl text-xs sm:text-sm font-semibold transition-all cursor-pointer text-slate-600 hover:bg-slate-100 hover:text-slate-900">
+            Test 4: Score Shift
+          </button>
+          <button type="button" data-tab="tab6" onclick="switchTab('tab6')" class="tab-btn whitespace-nowrap px-3.5 py-2 rounded-xl text-xs sm:text-sm font-semibold transition-all cursor-pointer text-slate-600 hover:bg-slate-100 hover:text-slate-900">
+            Dataset (100 Rows)
+          </button>
+        </div>
+      </nav>
+    </div>
+  </header>
+
+  <!-- ==================== MAIN CONTENT ==================== -->
+  <main id="mainContent" class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-12">
+
+    <!-- ==================== TAB 0: OVERVIEW & CONCLUSION ==================== -->
+    <section id="tabOverview" class="tab-panel space-y-6">
+      <!-- Verdict Banner -->
+      <div class="bg-gradient-to-br from-indigo-950 via-western to-slate-900 text-white rounded-2xl p-6 sm:p-8 shadow-md border border-indigo-800/40">
+        <div class="flex flex-wrap items-center gap-2 mb-3">
+          <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-400/20 border border-amber-300/40 text-amber-200 text-xs font-bold uppercase tracking-wider">
+            Phase 1 Hypothesis Verdict
+          </span>
+          <span class="inline-flex items-center px-3 py-1 rounded-full bg-white/10 text-indigo-100 text-xs font-medium">
+            Paired Within-Subject Human Audit (n = 25)
+          </span>
+        </div>
+        <h2 class="text-xl sm:text-2xl lg:text-3xl font-extrabold leading-snug tracking-tight">
+          Hypothesis Status: <span class="text-amber-300">Partially Proven</span> — Yes on Systematic 3B Judge Bias (p &le; 0.0003 on 4 of 6 Dimensions); Directional (p = 0.08–0.12, Not Yet Proven at p &lt; 0.05) on the Western-vs.-Indic Error Gap.
+        </h2>
+        <p class="mt-3 text-sm sm:text-base text-indigo-100/90 leading-relaxed max-w-4xl">
+          Across 100 real Indian human evaluations spanning 4 counterbalanced forms, Phase 1 conclusively proves severe calibration failure and Indic rank-order collapse in <code>qwen2.5:3b</code>, while transparently reporting that the Western-vs.-Indic MAE gap is a directional trend requiring 60–80 raters across richer Indian scenarios in Phase 2.
+        </p>
+      </div>
+
+      <!-- 4 KPI Cards -->
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div class="bg-white border border-slate-200 rounded-2xl p-5 shadow-sm hover:shadow-md transition-shadow">
+          <div class="flex items-center justify-between">
+            <span class="text-xs font-semibold uppercase tracking-wider text-slate-500">Total Evaluations</span>
+            <span class="px-2 py-0.5 text-[11px] font-semibold rounded-full bg-teal-50 text-human border border-teal-200">Real Data</span>
+          </div>
+          <div class="mt-2 text-2xl sm:text-3xl font-extrabold text-slate-900">100</div>
+          <p class="mt-1.5 text-xs text-slate-600 leading-relaxed">
+            <strong>25 Indian Raters</strong> across 4 forms (<span class="font-semibold text-slate-800">F1=10, F2=4, F3=9, F4=2</span>); 1 Western + 1 Indic episode each.
+          </p>
+        </div>
+
+        <div class="bg-white border border-slate-200 rounded-2xl p-5 shadow-sm hover:shadow-md transition-shadow">
+          <div class="flex items-center justify-between">
+            <span class="text-xs font-semibold uppercase tracking-wider text-slate-500">Significant Judge Bias</span>
+            <span class="px-2 py-0.5 text-[11px] font-semibold rounded-full bg-red-50 text-alert border border-red-200">p &le; 0.0003</span>
+          </div>
+          <div class="mt-2 text-2xl sm:text-3xl font-extrabold text-alert">4 / 6 dims</div>
+          <p class="mt-1.5 text-xs text-slate-600 leading-relaxed">
+            Wilcoxon test confirms systematic 3B inflation on <span class="font-semibold text-slate-800">Financial, Social Rules, Believability &amp; Goal</span>.
+          </p>
+        </div>
+
+        <div class="bg-white border border-slate-200 rounded-2xl p-5 shadow-sm hover:shadow-md transition-shadow">
+          <div class="flex items-center justify-between">
+            <span class="text-xs font-semibold uppercase tracking-wider text-slate-500">Cultural Gap Trend</span>
+            <span class="px-2 py-0.5 text-[11px] font-semibold rounded-full bg-orange-50 text-indic border border-orange-200">d<sub>z</sub> = 0.32–0.37</span>
+          </div>
+          <div class="mt-2 text-2xl sm:text-3xl font-extrabold text-indic">+0.56 to +0.82 MAE</div>
+          <p class="mt-1.5 text-xs text-slate-600 leading-relaxed">
+            Higher Indic error on <span class="font-semibold text-slate-800">Goal, Relationship &amp; Believability</span> (directional, p = 0.08–0.12).
+          </p>
+        </div>
+
+        <div class="bg-white border border-slate-200 rounded-2xl p-5 shadow-sm hover:shadow-md transition-shadow">
+          <div class="flex items-center justify-between">
+            <span class="text-xs font-semibold uppercase tracking-wider text-slate-500">Post-Hoc Power (n=25)</span>
+            <span class="px-2 py-0.5 text-[11px] font-semibold rounded-full bg-indigo-50 text-western border border-indigo-200">Phase 2 Target</span>
+          </div>
+          <div class="mt-2 text-2xl sm:text-3xl font-extrabold text-western">34% – 43%</div>
+          <p class="mt-1.5 text-xs text-slate-600 leading-relaxed">
+            <strong>60–80 raters</strong> needed to reach 80% statistical power at &alpha; = 0.05 for Test 3.
+          </p>
+        </div>
+      </div>
+
+      <!-- Two-Column Comparison: What Is Proven vs. Honest Limitations -->
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div class="bg-white border border-teal-200 rounded-2xl p-6 shadow-sm">
+          <div class="flex items-center justify-between gap-2 pb-3 mb-4 border-b border-teal-100">
+            <h3 class="text-lg font-bold text-teal-950 flex items-center gap-2">
+              <span class="inline-flex items-center justify-center w-6 h-6 rounded-full bg-teal-100 text-human text-xs font-extrabold">&#10003;</span>
+              What Is Proven / Strong Evidence
+            </h3>
+            <span class="px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-teal-50 text-human border border-teal-200">Verified</span>
+          </div>
+          <ul class="space-y-3 text-sm text-slate-700 leading-relaxed">
+            <li class="flex items-start gap-2.5 p-3 rounded-xl bg-teal-50/40 border border-teal-100">
+              <span class="font-extrabold text-human mt-0.5">1.</span>
+              <span><strong>Real Human Data (Zero Fabrication):</strong> All 100 agent evaluations come from 25 real Indian raters (students &amp; faculty) across 4 counterbalanced forms.</span>
+            </li>
+            <li class="flex items-start gap-2.5 p-3 rounded-xl bg-teal-50/40 border border-teal-100">
+              <span class="font-extrabold text-human mt-0.5">2.</span>
+              <span><strong>Rigorous Rater-Level Aggregation:</strong> Observations are averaged per rater (n=25 independent units) before hypothesis testing, avoiding pseudoreplication.</span>
+            </li>
+            <li class="flex items-start gap-2.5 p-3 rounded-xl bg-teal-50/40 border border-teal-100">
+              <span class="font-extrabold text-human mt-0.5">3.</span>
+              <span><strong>Systematic 3B Judge Bias (p &le; 0.0003):</strong> <code>qwen2.5:3b</code> significantly inflates Financial (+2.84), Social Rules (+2.19; outputs flat <code>0</code>), Believability (+1.90), and Goal (+1.87).</span>
+            </li>
+            <li class="flex items-start gap-2.5 p-3 rounded-xl bg-teal-50/40 border border-teal-100">
+              <span class="font-extrabold text-human mt-0.5">4.</span>
+              <span><strong>Indic Rank-Order Collapse:</strong> Spearman's &rho; collapses on Indic episodes for Believability (<strong>+0.48 &rarr; -0.15</strong>) and Goal (<strong>+0.35 &rarr; -0.10</strong>).</span>
+            </li>
+          </ul>
+        </div>
+
+        <div class="bg-white border border-amber-200 rounded-2xl p-6 shadow-sm">
+          <div class="flex items-center justify-between gap-2 pb-3 mb-4 border-b border-amber-100">
+            <h3 class="text-lg font-bold text-amber-950 flex items-center gap-2">
+              <span class="inline-flex items-center justify-center w-6 h-6 rounded-full bg-amber-100 text-amber-800 text-xs font-extrabold">!</span>
+              Honest Limitations
+            </h3>
+            <span class="px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-amber-50 text-amber-800 border border-amber-200">Pilot Scope</span>
+          </div>
+          <ul class="space-y-3 text-sm text-slate-700 leading-relaxed">
+            <li class="flex items-start gap-2.5 p-3 rounded-xl bg-amber-50/50 border border-amber-100">
+              <span class="font-extrabold text-amber-700 mt-0.5">1.</span>
+              <span><strong>Single Small Model &amp; Single Scenario:</strong> Tested only <code>qwen2.5:3b</code> on TV price negotiation—too narrow to generalize to all LLMs or deep Indian cultural norms yet.</span>
+            </li>
+            <li class="flex items-start gap-2.5 p-3 rounded-xl bg-amber-50/50 border border-amber-100">
+              <span class="font-extrabold text-amber-700 mt-0.5">2.</span>
+              <span><strong>Test 3 Is Directional (Not Significant at &alpha;=0.05):</strong> Cultural MAE p-values (0.08–0.12) fall short of 0.05 due to low power (34%–43%) at n=25.</span>
+            </li>
+            <li class="flex items-start gap-2.5 p-3 rounded-xl bg-amber-50/50 border border-amber-100">
+              <span class="font-extrabold text-amber-700 mt-0.5">3.</span>
+              <span><strong>Noisy Negative Penalty Scales:</strong> Confusing <code>-10 to 0</code> dropdowns caused scale inversions and drove Social Rules agreement down to &alpha; = -0.024.</span>
+            </li>
+            <li class="flex items-start gap-2.5 p-3 rounded-xl bg-amber-50/50 border border-amber-100">
+              <span class="font-extrabold text-amber-700 mt-0.5">4.</span>
+              <span><strong>Unbalanced Forms &amp; Author Pilot Entry:</strong> Form 4 has only k=2 raters (descriptive only), and 1 author response was included in Form 1 during pilot testing (strictly excluded in Phase 2).</span>
+            </li>
+          </ul>
+        </div>
+      </div>
+
+      <!-- What We Have Right Now vs. What We Needed (Phase 2 Roadmap) -->
+      <div class="bg-white border border-slate-200 rounded-2xl p-5 sm:p-6 shadow-sm">
+        <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 mb-4">
+          <div>
+            <h3 class="text-lg font-bold text-slate-900">What We Have Right Now vs. What We Needed (Phase 2 Roadmap)</h3>
+            <p class="text-xs text-slate-500 mt-0.5">Actionable upgrades directly derived from Phase 1 statistical power and rubric diagnostics.</p>
+          </div>
+          <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-indigo-50 text-western border border-indigo-200 self-start sm:self-auto">
+            80% Power Target (&alpha; = 0.05)
+          </span>
+        </div>
+        <div class="overflow-x-auto">
+          <table class="w-full text-sm text-left border-collapse">
+            <thead>
+              <tr class="border-b border-slate-200 text-xs uppercase text-slate-500 bg-slate-50">
+                <th class="py-3 px-4 rounded-tl-xl font-semibold">Factor</th>
+                <th class="py-3 px-4 font-semibold text-amber-900">What We Have Right Now (Phase 1)</th>
+                <th class="py-3 px-4 rounded-tr-xl font-semibold text-human">What We Needed (Phase 2 Target)</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-slate-100">
+              <tr class="hover:bg-slate-50">
+                <td class="py-3.5 px-4 font-bold text-slate-800">Raters</td>
+                <td class="py-3.5 px-4 text-slate-700">25 raters (uneven; Form 4 k=2)</td>
+                <td class="py-3.5 px-4 text-teal-900 font-medium">60–80 balanced external raters</td>
+              </tr>
+              <tr class="hover:bg-slate-50">
+                <td class="py-3.5 px-4 font-bold text-slate-800">Statistical Power</td>
+                <td class="py-3.5 px-4 text-slate-700">34%–43% (underpowered for subtle MAE shifts)</td>
+                <td class="py-3.5 px-4 text-teal-900 font-medium">80%+ standard research threshold</td>
+              </tr>
+              <tr class="hover:bg-slate-50">
+                <td class="py-3.5 px-4 font-bold text-slate-800">Scenarios</td>
+                <td class="py-3.5 px-4 text-slate-700">1 scenario (TV price negotiation)</td>
+                <td class="py-3.5 px-4 text-teal-900 font-medium">5–10 high-context Indian scenarios (hierarchy, elder deference, indirect refusal, family favors)</td>
+              </tr>
+              <tr class="hover:bg-slate-50">
+                <td class="py-3.5 px-4 font-bold text-slate-800">Scales</td>
+                <td class="py-3.5 px-4 text-slate-700">Mixed (<code>0–10</code>, <code>-5 to +5</code>, <code>-10 to 0</code>)</td>
+                <td class="py-3.5 px-4 text-teal-900 font-medium">Uniform <code>0–10</code> positive scales with clear anchor examples</td>
+              </tr>
+              <tr class="hover:bg-slate-50">
+                <td class="py-3.5 px-4 font-bold text-slate-800">Judges</td>
+                <td class="py-3.5 px-4 text-slate-700"><code>qwen2.5:3b</code> only</td>
+                <td class="py-3.5 px-4 text-teal-900 font-medium">3B vs. 70B / frontier judge comparison (separating model size from cultural bias)</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- ==================== TAB 1: TEST 1 (AGREEMENT) ==================== -->
+    <section id="tab1" class="tab-panel hidden space-y-6">
+      <div class="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-2">
+        <div>
+          <span class="text-xs font-bold uppercase tracking-wider text-human">Test Guide &bull; Inter-Annotator Reliability</span>
+          <h2 class="text-2xl font-bold text-slate-900 mt-0.5">Test 1: Human Agreement (Krippendorff's &alpha; &amp; Form-Wise ICC(2,1))</h2>
+        </div>
+        <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-teal-50 text-human border border-teal-200 self-start sm:self-auto">
+          n = 25 Raters &bull; 16 Unique Items
+        </span>
+      </div>
+
+      <!-- 3-Part Explainer Cards -->
+      <div class="bg-white border border-slate-200 rounded-2xl p-5 shadow-sm">
+        <div class="text-xs font-bold uppercase tracking-wider text-slate-500 mb-3">How This Test Works</div>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div class="p-4 rounded-xl bg-indigo-50/60 border border-indigo-100">
+            <div class="text-xs font-extrabold uppercase tracking-wider text-western mb-1.5">Why This Test Was Used</div>
+            <p class="text-xs sm:text-[13px] text-slate-700 leading-relaxed">
+              Before blaming an AI judge, we must check if human raters agree with each other. Pooled Krippendorff's &alpha; handles our sparse 25&times;16 multi-form matrix and unequal form sizes (k=10, 4, 9, 2), while form-wise ICC(2,1) checks absolute agreement within each individual form.
+            </p>
+          </div>
+          <div class="p-4 rounded-xl bg-slate-50 border border-slate-200">
+            <div class="text-xs font-extrabold uppercase tracking-wider text-slate-800 mb-1.5">What It Is Doing</div>
+            <p class="text-xs sm:text-[13px] text-slate-700 leading-relaxed">
+              Compares scores given by different raters to the exact same <code>(episode, agent)</code> item—never comparing across different forms—and contrasts observed disagreement against chance. Also tracks Within-Item SD (raw score spread in scale points).
+            </p>
+          </div>
+          <div class="p-4 rounded-xl bg-teal-50/60 border border-teal-100">
+            <div class="text-xs font-extrabold uppercase tracking-wider text-human mb-1.5">What It Signifies</div>
+            <p class="text-xs sm:text-[13px] text-slate-700 leading-relaxed">
+              Moderate agreement on objective outcomes (<strong>Financial &alpha;=0.433</strong>, <strong>Goal &alpha;=0.349</strong>), but breakdown on <strong>Social Rules (-0.024)</strong> due to confusing negative (<code>-10 to 0</code>) penalty scales—directly motivating uniform <code>0–10</code> scales in Phase 2.
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Chart: Pooled Krippendorff's Alpha -->
+      <div class="bg-white border border-slate-200 rounded-2xl p-5 sm:p-6 shadow-sm">
+        <div class="mb-4">
+          <h3 class="text-base font-bold text-slate-900">Pooled Krippendorff's &alpha; (Interval Scale, n = 25 Raters)</h3>
+          <p class="text-xs text-slate-500 mt-0.5">Dashed vertical line marks the 0.40 moderate reliability benchmark.</p>
+        </div>
+        <div class="relative h-72 sm:h-80 w-full">
+          <canvas id="chartAlpha"></canvas>
+        </div>
+      </div>
+
+      <!-- Two Side-by-Side Color-Coded Tables -->
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+        <!-- Table 1A: Pooled Alpha + Form-wise ICC(2,1) -->
+        <div class="lg:col-span-7 bg-white border border-slate-200 rounded-2xl p-5 shadow-sm">
+          <div class="mb-3">
+            <h3 class="text-base font-bold text-slate-900">Table 1A: Pooled &alpha; &amp; Form-Wise ICC(2,1)</h3>
+            <p class="text-xs text-slate-500">Teal/green = stronger agreement; red = negative reliability.</p>
+          </div>
+          <div class="overflow-x-auto">
+            <table class="w-full text-xs sm:text-sm text-left border-collapse">
+              <thead>
+                <tr class="border-b border-slate-200 text-[11px] uppercase text-slate-500 bg-slate-50">
+                  <th class="py-2.5 px-3 rounded-tl-xl font-semibold">Dimension</th>
+                  <th class="py-2.5 px-2.5 text-center font-bold text-slate-800">Pooled &alpha;<br/><span class="font-normal text-[10px]">(n=25)</span></th>
+                  <th class="py-2.5 px-2.5 text-center font-semibold">Form 1<br/><span class="font-normal text-[10px]">(k=10)</span></th>
+                  <th class="py-2.5 px-2.5 text-center font-semibold">Form 2<br/><span class="font-normal text-[10px]">(k=4)</span></th>
+                  <th class="py-2.5 px-2.5 text-center font-semibold">Form 3<br/><span class="font-normal text-[10px]">(k=9)</span></th>
+                  <th class="py-2.5 px-2.5 text-center rounded-tr-xl font-semibold">Form 4<br/><span class="font-normal text-[10px]">(k=2*)</span></th>
+                </tr>
+              </thead>
+              <tbody id="iccTableBody" class="divide-y divide-slate-100 font-medium"></tbody>
+            </table>
+          </div>
+          <p class="mt-3 text-[11px] text-amber-800 bg-amber-50 border border-amber-200 rounded-lg px-3 py-1.5">
+            *Form 4 (k=2) is descriptive only due to small rater count.
+          </p>
+        </div>
+
+        <!-- Table 1B: Mean Within-Item SD Heatmap -->
+        <div class="lg:col-span-5 bg-white border border-slate-200 rounded-2xl p-5 shadow-sm">
+          <div class="mb-3">
+            <h3 class="text-base font-bold text-slate-900">Table 1B: Mean Within-Item SD</h3>
+            <p class="text-xs text-slate-500">Lower SD (teal) = tighter rater agreement on the same item.</p>
+          </div>
+          <div class="overflow-x-auto">
+            <table class="w-full text-xs sm:text-sm text-left border-collapse">
+              <thead>
+                <tr class="border-b border-slate-200 text-[11px] uppercase text-slate-500 bg-slate-50">
+                  <th class="py-2.5 px-3 rounded-tl-xl font-semibold">Dimension</th>
+                  <th class="py-2.5 px-2 text-center font-semibold">F1</th>
+                  <th class="py-2.5 px-2 text-center font-semibold">F2</th>
+                  <th class="py-2.5 px-2 text-center font-semibold">F3</th>
+                  <th class="py-2.5 px-2 text-center rounded-tr-xl font-semibold">F4*</th>
+                </tr>
+              </thead>
+              <tbody id="sdTableBody" class="divide-y divide-slate-100 font-medium"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ==================== TAB 2: TEST 2 (JUDGE BIAS) ==================== -->
+    <section id="tab2" class="tab-panel hidden space-y-6">
+      <div class="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-2">
+        <div>
+          <span class="text-xs font-bold uppercase tracking-wider text-alert">Test Guide &bull; Proven at p &le; 0.0003</span>
+          <h2 class="text-2xl font-bold text-slate-900 mt-0.5">Test 2: LLM-vs.-Human Systematic Bias &amp; Rank Correlation</h2>
+        </div>
+        <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-red-50 text-alert border border-red-200 self-start sm:self-auto">
+          4 / 6 Dimensions Significantly Biased
+        </span>
+      </div>
+
+      <!-- 3-Part Explainer Cards -->
+      <div class="bg-white border border-slate-200 rounded-2xl p-5 shadow-sm">
+        <div class="text-xs font-bold uppercase tracking-wider text-slate-500 mb-3">How This Test Works</div>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div class="p-4 rounded-xl bg-indigo-50/60 border border-indigo-100">
+            <div class="text-xs font-extrabold uppercase tracking-wider text-western mb-1.5">Why This Test Was Used</div>
+            <p class="text-xs sm:text-[13px] text-slate-700 leading-relaxed">
+              Tests whether <code>qwen2.5:3b</code> systematically over- or under-scores compared to Indian raters, and whether it still ranks better vs. worse performances in the right order.
+            </p>
+          </div>
+          <div class="p-4 rounded-xl bg-slate-50 border border-slate-200">
+            <div class="text-xs font-extrabold uppercase tracking-wider text-slate-800 mb-1.5">What It Is Doing</div>
+            <p class="text-xs sm:text-[13px] text-slate-700 leading-relaxed">
+              Computes signed error (<code>LLM &minus; Human</code>), averages per rater (<strong>n=25 independent observations</strong> to prevent pseudoreplication), runs one-sample Wilcoxon signed-rank &amp; <em>t</em>-tests against 0, and computes item-level Spearman &rho; across Western (8 items) vs. Indic (8 items).
+            </p>
+          </div>
+          <div class="p-4 rounded-xl bg-red-50/60 border border-red-100">
+            <div class="text-xs font-extrabold uppercase tracking-wider text-alert mb-1.5">What It Signifies</div>
+            <p class="text-xs sm:text-[13px] text-slate-700 leading-relaxed">
+              Strongest Phase 1 proof—statistically significant judge inflation (<strong>p &le; 0.0003</strong>) on 4 of 6 dimensions, plus rank-order collapse on Indic Believability (<strong>+0.48 &rarr; -0.15</strong>) and Goal (<strong>+0.35 &rarr; -0.10</strong>).
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Two Charts -->
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+        <div class="lg:col-span-6 bg-white border border-slate-200 rounded-2xl p-5 sm:p-6 shadow-sm">
+          <div class="mb-4">
+            <h3 class="text-base font-bold text-slate-900">Systematic Bias (LLM Score &minus; Human Score)</h3>
+            <p class="text-xs text-slate-500 mt-0.5">Indigo = significant judge inflation (p &le; 0.0003); Red = judge over-penalizes.</p>
+          </div>
+          <div class="relative h-72 sm:h-80 w-full">
+            <canvas id="chartBias"></canvas>
+          </div>
+        </div>
+
+        <div class="lg:col-span-6 bg-white border border-slate-200 rounded-2xl p-5 sm:p-6 shadow-sm">
+          <div class="mb-4">
+            <h3 class="text-base font-bold text-slate-900">Spearman Rank Correlation (&rho;): Western vs. Indic</h3>
+            <p class="text-xs text-slate-500 mt-0.5">Social Rules omitted because the 3B judge output a constant 0 across all episodes.</p>
+          </div>
+          <div class="relative h-72 sm:h-80 w-full">
+            <canvas id="chartSpearman"></canvas>
+          </div>
+        </div>
+      </div>
+
+      <!-- Full Test 2 Statistical Table -->
+      <div class="bg-white border border-slate-200 rounded-2xl p-5 sm:p-6 shadow-sm">
+        <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-4 gap-2">
+          <h3 class="text-base font-bold text-slate-900">Test 2 Statistical Summary (n = 25 Independent Rater Means)</h3>
+          <span class="text-xs text-slate-500">*** p &lt; 0.001 &nbsp;|&nbsp; ns = not significant</span>
+        </div>
+        <div class="overflow-x-auto">
+          <table class="w-full text-xs sm:text-sm text-left border-collapse">
+            <thead>
+              <tr class="border-b border-slate-200 text-[11px] uppercase text-slate-500 bg-slate-50">
+                <th class="py-3 px-3 rounded-tl-xl font-semibold">Dimension</th>
+                <th class="py-3 px-2.5 text-right font-semibold">LLM Mean</th>
+                <th class="py-3 px-2.5 text-right font-semibold">Human Mean</th>
+                <th class="py-3 px-2.5 text-right font-semibold">Bias (L&minus;H)</th>
+                <th class="py-3 px-2.5 text-right font-semibold">Wilcoxon p</th>
+                <th class="py-3 px-2.5 text-right font-semibold">t-test p</th>
+                <th class="py-3 px-2.5 text-right font-semibold">Overall MAE</th>
+                <th class="py-3 px-2.5 text-right font-semibold">&rho; All (16)</th>
+                <th class="py-3 px-2.5 text-right font-semibold text-western">&rho; West (8)</th>
+                <th class="py-3 px-3 text-right rounded-tr-xl font-semibold text-indic">&rho; Indic (8)</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-slate-100">
+              <tr class="hover:bg-slate-50">
+                <td class="py-3 px-3 font-semibold text-slate-800">Financial</td>
+                <td class="py-3 px-2.5 text-right">3.45</td>
+                <td class="py-3 px-2.5 text-right">0.61</td>
+                <td class="py-3 px-2.5 text-right font-bold text-western">+2.84</td>
+                <td class="py-3 px-2.5 text-right"><span class="px-2 py-0.5 rounded-full text-xs font-bold bg-red-50 text-alert">0.0001***</span></td>
+                <td class="py-3 px-2.5 text-right font-medium text-slate-700">&lt;0.0001</td>
+                <td class="py-3 px-2.5 text-right font-semibold">3.94</td>
+                <td class="py-3 px-2.5 text-right text-slate-600">-0.24</td>
+                <td class="py-3 px-2.5 text-right text-western font-medium">-0.26</td>
+                <td class="py-3 px-3 text-right text-indic font-medium">-0.28</td>
+              </tr>
+              <tr class="hover:bg-slate-50">
+                <td class="py-3 px-3 font-semibold text-slate-800">Social Rules</td>
+                <td class="py-3 px-2.5 text-right">0.00</td>
+                <td class="py-3 px-2.5 text-right">-2.19</td>
+                <td class="py-3 px-2.5 text-right font-bold text-western">+2.19</td>
+                <td class="py-3 px-2.5 text-right"><span class="px-2 py-0.5 rounded-full text-xs font-bold bg-red-50 text-alert">0.0001***</span></td>
+                <td class="py-3 px-2.5 text-right font-medium text-slate-700">0.0004</td>
+                <td class="py-3 px-2.5 text-right font-semibold">2.19</td>
+                <td class="py-3 px-2.5 text-right text-slate-400">N/A</td>
+                <td class="py-3 px-2.5 text-right text-slate-400">N/A</td>
+                <td class="py-3 px-3 text-right text-slate-400">N/A</td>
+              </tr>
+              <tr class="hover:bg-slate-50">
+                <td class="py-3 px-3 font-semibold text-slate-800">Believability</td>
+                <td class="py-3 px-2.5 text-right">8.33</td>
+                <td class="py-3 px-2.5 text-right">6.43</td>
+                <td class="py-3 px-2.5 text-right font-bold text-western">+1.90</td>
+                <td class="py-3 px-2.5 text-right"><span class="px-2 py-0.5 rounded-full text-xs font-bold bg-red-50 text-alert">0.0001***</span></td>
+                <td class="py-3 px-2.5 text-right font-medium text-slate-700">0.0001</td>
+                <td class="py-3 px-2.5 text-right font-semibold">2.42</td>
+                <td class="py-3 px-2.5 text-right text-slate-600">+0.23</td>
+                <td class="py-3 px-2.5 text-right text-western font-bold">+0.48</td>
+                <td class="py-3 px-3 text-right text-alert font-bold">-0.15</td>
+              </tr>
+              <tr class="hover:bg-slate-50">
+                <td class="py-3 px-3 font-semibold text-slate-800">Goal</td>
+                <td class="py-3 px-2.5 text-right">7.87</td>
+                <td class="py-3 px-2.5 text-right">6.00</td>
+                <td class="py-3 px-2.5 text-right font-bold text-western">+1.87</td>
+                <td class="py-3 px-2.5 text-right"><span class="px-2 py-0.5 rounded-full text-xs font-bold bg-red-50 text-alert">0.0003***</span></td>
+                <td class="py-3 px-2.5 text-right font-medium text-slate-700">&lt;0.0001</td>
+                <td class="py-3 px-2.5 text-right font-semibold">2.95</td>
+                <td class="py-3 px-2.5 text-right text-slate-600">+0.27</td>
+                <td class="py-3 px-2.5 text-right text-western font-bold">+0.35</td>
+                <td class="py-3 px-3 text-right text-alert font-bold">-0.10</td>
+              </tr>
+              <tr class="hover:bg-slate-50">
+                <td class="py-3 px-3 font-semibold text-slate-800">Relationship</td>
+                <td class="py-3 px-2.5 text-right">2.04</td>
+                <td class="py-3 px-2.5 text-right">1.84</td>
+                <td class="py-3 px-2.5 text-right font-medium text-slate-600">+0.20</td>
+                <td class="py-3 px-2.5 text-right"><span class="px-2 py-0.5 rounded-full text-xs font-medium bg-slate-100 text-slate-600">0.6168 ns</span></td>
+                <td class="py-3 px-2.5 text-right text-slate-500">0.6819</td>
+                <td class="py-3 px-2.5 text-right font-semibold">2.98</td>
+                <td class="py-3 px-2.5 text-right text-slate-600">-0.02</td>
+                <td class="py-3 px-2.5 text-right text-western">+0.22</td>
+                <td class="py-3 px-3 text-right text-indic">+0.31</td>
+              </tr>
+              <tr class="hover:bg-slate-50">
+                <td class="py-3 px-3 font-semibold text-slate-800">Secret Keeping</td>
+                <td class="py-3 px-2.5 text-right">-4.09</td>
+                <td class="py-3 px-2.5 text-right">-3.14</td>
+                <td class="py-3 px-2.5 text-right font-bold text-alert">-0.95</td>
+                <td class="py-3 px-2.5 text-right"><span class="px-2 py-0.5 rounded-full text-xs font-medium bg-slate-100 text-slate-600">0.3123 ns</span></td>
+                <td class="py-3 px-2.5 text-right text-slate-500">0.2241</td>
+                <td class="py-3 px-2.5 text-right font-semibold">3.95</td>
+                <td class="py-3 px-2.5 text-right text-slate-600">-0.33</td>
+                <td class="py-3 px-2.5 text-right text-western">-0.52</td>
+                <td class="py-3 px-3 text-right text-indic">-0.16</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- ==================== TAB 3: TEST 3 (CULTURAL GAP) ==================== -->
+    <section id="tab3" class="tab-panel hidden space-y-6">
+      <div class="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-2">
+        <div>
+          <span class="text-xs font-bold uppercase tracking-wider text-indic">Test Guide &bull; Paired Cultural Discrepancy</span>
+          <h2 class="text-2xl font-bold text-slate-900 mt-0.5">Test 3: Cultural Discrepancy in MAE (&Delta;MAE: Indic &minus; Western)</h2>
+        </div>
+        <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-amber-50 text-amber-800 border border-amber-200 self-start sm:self-auto">
+          Directional Trend (p = 0.08–0.12) &bull; Power 34%–43%
+        </span>
+      </div>
+
+      <!-- 3-Part Explainer Cards -->
+      <div class="bg-white border border-slate-200 rounded-2xl p-5 shadow-sm">
+        <div class="text-xs font-bold uppercase tracking-wider text-slate-500 mb-3">How This Test Works</div>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div class="p-4 rounded-xl bg-indigo-50/60 border border-indigo-100">
+            <div class="text-xs font-extrabold uppercase tracking-wider text-western mb-1.5">Why This Test Was Used</div>
+            <p class="text-xs sm:text-[13px] text-slate-700 leading-relaxed">
+              Directly tests our core research hypothesis—is LLM–human disagreement larger on Indic conversations than on matched Western ones?
+            </p>
+          </div>
+          <div class="p-4 rounded-xl bg-slate-50 border border-slate-200">
+            <div class="text-xs font-extrabold uppercase tracking-wider text-slate-800 mb-1.5">What It Is Doing</div>
+            <p class="text-xs sm:text-[13px] text-slate-700 leading-relaxed">
+              Paired within-subject comparison (n=25 raters) of <code>MAE<sub>Indic</sub> &minus; MAE<sub>Western</sub></code> using paired Wilcoxon signed-rank test, paired <em>t</em>-test, Cohen's d<sub>z</sub> effect size, and post-hoc power analysis.
+            </p>
+          </div>
+          <div class="p-4 rounded-xl bg-amber-50/70 border border-amber-200">
+            <div class="text-xs font-extrabold uppercase tracking-wider text-amber-900 mb-1.5">What It Signifies</div>
+            <p class="text-xs sm:text-[13px] text-slate-700 leading-relaxed">
+              Error increases on Indic for all 3 core task/social dimensions (<strong>Goal +0.82</strong>, <strong>Relationship +0.80</strong>, <strong>Believability +0.56</strong>; d<sub>z</sub> = 0.32–0.37), but at n=25 (34%–43% power) p-values stay at 0.08–0.12—a clear directional trend justifying 60–80 raters in Phase 2.
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Two Charts -->
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+        <div class="lg:col-span-7 bg-white border border-slate-200 rounded-2xl p-5 sm:p-6 shadow-sm">
+          <div class="mb-4">
+            <h3 class="text-base font-bold text-slate-900">Western MAE vs. Indic MAE (6 Dimensions + Composite)</h3>
+            <p class="text-xs text-slate-500 mt-0.5">Comparing 50 Western vs. 50 Indic agent-evaluations across all 25 raters.</p>
+          </div>
+          <div class="relative h-72 sm:h-80 w-full">
+            <canvas id="chartMAE"></canvas>
+          </div>
+        </div>
+
+        <div class="lg:col-span-5 bg-white border border-slate-200 rounded-2xl p-5 sm:p-6 shadow-sm">
+          <div class="mb-4">
+            <h3 class="text-base font-bold text-slate-900">Paired &Delta;MAE (Indic &minus; Western)</h3>
+            <p class="text-xs text-slate-500 mt-0.5">Amber/orange = larger error on Indic; Indigo = larger error on Western.</p>
+          </div>
+          <div class="relative h-72 sm:h-80 w-full">
+            <canvas id="chartDeltaMAE"></canvas>
+          </div>
+        </div>
+      </div>
+
+      <!-- Full Test 3 Table with Power Analysis -->
+      <div class="bg-white border border-slate-200 rounded-2xl p-5 sm:p-6 shadow-sm">
+        <h3 class="text-base font-bold text-slate-900 mb-4">Test 3 Statistical Summary &amp; Post-Hoc Power Analysis (n = 25)</h3>
+        <div class="overflow-x-auto">
+          <table class="w-full text-xs sm:text-sm text-left border-collapse">
+            <thead>
+              <tr class="border-b border-slate-200 text-[11px] uppercase text-slate-500 bg-slate-50">
+                <th class="py-3 px-3 rounded-tl-xl font-semibold">Dimension</th>
+                <th class="py-3 px-2.5 text-right font-semibold text-western">MAE West</th>
+                <th class="py-3 px-2.5 text-right font-semibold text-indic">MAE Indic</th>
+                <th class="py-3 px-2.5 text-right font-semibold">&Delta;MAE (&plusmn;95% CI)</th>
+                <th class="py-3 px-2.5 text-right font-semibold">Wilcoxon p</th>
+                <th class="py-3 px-2.5 text-right font-semibold">Paired t p</th>
+                <th class="py-3 px-2.5 text-right font-semibold">Cohen's d<sub>z</sub></th>
+                <th class="py-3 px-3 text-right rounded-tr-xl font-semibold text-slate-700">Power Analysis (80% Target)</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-slate-100">
+              <tr class="hover:bg-slate-50">
+                <td class="py-3 px-3 font-semibold text-slate-800">Goal</td>
+                <td class="py-3 px-2.5 text-right">2.54</td>
+                <td class="py-3 px-2.5 text-right font-semibold text-indic">3.36</td>
+                <td class="py-3 px-2.5 text-right font-bold text-indic">+0.82 <span class="font-normal text-slate-500">(&plusmn;0.92)</span></td>
+                <td class="py-3 px-2.5 text-right"><span class="px-2 py-0.5 rounded-full text-xs font-semibold bg-amber-50 text-amber-800 border border-amber-200">0.0843</span></td>
+                <td class="py-3 px-2.5 text-right font-medium text-amber-800">0.0797</td>
+                <td class="py-3 px-2.5 text-right font-bold text-indic">+0.37</td>
+                <td class="py-3 px-3 text-right font-semibold text-western">42.7% power &rarr; n = 60 needed</td>
+              </tr>
+              <tr class="hover:bg-slate-50">
+                <td class="py-3 px-3 font-semibold text-slate-800">Relationship</td>
+                <td class="py-3 px-2.5 text-right">2.58</td>
+                <td class="py-3 px-2.5 text-right font-semibold text-indic">3.38</td>
+                <td class="py-3 px-2.5 text-right font-bold text-indic">+0.80 <span class="font-normal text-slate-500">(&plusmn;1.00)</span></td>
+                <td class="py-3 px-2.5 text-right">0.1031</td>
+                <td class="py-3 px-2.5 text-right">0.1101</td>
+                <td class="py-3 px-2.5 text-right font-bold text-indic">+0.33</td>
+                <td class="py-3 px-3 text-right font-semibold text-western">35.4% power &rarr; n = 75 needed</td>
+              </tr>
+              <tr class="hover:bg-slate-50">
+                <td class="py-3 px-3 font-semibold text-slate-800">Believability</td>
+                <td class="py-3 px-2.5 text-right">2.14</td>
+                <td class="py-3 px-2.5 text-right font-semibold text-indic">2.70</td>
+                <td class="py-3 px-2.5 text-right font-bold text-indic">+0.56 <span class="font-normal text-slate-500">(&plusmn;0.72)</span></td>
+                <td class="py-3 px-2.5 text-right">0.1190</td>
+                <td class="py-3 px-2.5 text-right">0.1231</td>
+                <td class="py-3 px-2.5 text-right font-bold text-indic">+0.32</td>
+                <td class="py-3 px-3 text-right font-semibold text-western">33.6% power &rarr; n = 79 needed</td>
+              </tr>
+              <tr class="hover:bg-slate-50">
+                <td class="py-3 px-3 font-semibold text-slate-800">Social Rules</td>
+                <td class="py-3 px-2.5 text-right">2.20</td>
+                <td class="py-3 px-2.5 text-right">2.18</td>
+                <td class="py-3 px-2.5 text-right text-slate-600">-0.02 <span class="font-normal text-slate-400">(&plusmn;0.71)</span></td>
+                <td class="py-3 px-2.5 text-right text-slate-500">0.8085</td>
+                <td class="py-3 px-2.5 text-right text-slate-500">0.9539</td>
+                <td class="py-3 px-2.5 text-right text-slate-500">-0.01</td>
+                <td class="py-3 px-3 text-right text-slate-400">No shift</td>
+              </tr>
+              <tr class="hover:bg-slate-50">
+                <td class="py-3 px-3 font-semibold text-slate-800">Secret Keeping</td>
+                <td class="py-3 px-2.5 text-right">4.04</td>
+                <td class="py-3 px-2.5 text-right">3.86</td>
+                <td class="py-3 px-2.5 text-right text-slate-600">-0.18 <span class="font-normal text-slate-400">(&plusmn;1.31)</span></td>
+                <td class="py-3 px-2.5 text-right text-slate-500">0.4742</td>
+                <td class="py-3 px-2.5 text-right text-slate-500">0.7795</td>
+                <td class="py-3 px-2.5 text-right text-slate-500">-0.06</td>
+                <td class="py-3 px-3 text-right text-slate-400">Negligible</td>
+              </tr>
+              <tr class="hover:bg-slate-50">
+                <td class="py-3 px-3 font-semibold text-slate-800">Financial</td>
+                <td class="py-3 px-2.5 text-right font-semibold text-western">4.26</td>
+                <td class="py-3 px-2.5 text-right">3.62</td>
+                <td class="py-3 px-2.5 text-right text-western font-medium">-0.64 <span class="font-normal text-slate-400">(&plusmn;0.85)</span></td>
+                <td class="py-3 px-2.5 text-right text-slate-500">0.1517</td>
+                <td class="py-3 px-2.5 text-right text-slate-500">0.1314</td>
+                <td class="py-3 px-2.5 text-right text-western">-0.31</td>
+                <td class="py-3 px-3 text-right text-slate-400">Reversed</td>
+              </tr>
+              <tr class="bg-slate-50 border-t-2 border-slate-200 font-bold">
+                <td class="py-3.5 px-3 text-slate-900">Composite (All 6)</td>
+                <td class="py-3.5 px-2.5 text-right text-western">2.96</td>
+                <td class="py-3.5 px-2.5 text-right text-indic">3.18</td>
+                <td class="py-3.5 px-2.5 text-right text-indic">+0.22 <span class="font-normal text-slate-500">(&plusmn;0.43)</span></td>
+                <td class="py-3.5 px-2.5 text-right text-slate-700">0.3694</td>
+                <td class="py-3.5 px-2.5 text-right text-slate-700">0.2898</td>
+                <td class="py-3.5 px-2.5 text-right text-indic">+0.22</td>
+                <td class="py-3.5 px-3 text-right text-slate-600">Directional</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- ==================== TAB 4: TEST 4 (SCORE SHIFT) ==================== -->
+    <section id="tab4" class="tab-panel hidden space-y-6">
+      <div class="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-2">
+        <div>
+          <span class="text-xs font-bold uppercase tracking-wider text-human">Test Guide &bull; Agent Degradation vs. Judge Bias</span>
+          <h2 class="text-2xl font-bold text-slate-900 mt-0.5">Test 4: Cultural Score Shift — Humans vs. Judge &amp; Qualitative Evidence</h2>
+        </div>
+        <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-teal-50 text-human border border-teal-200 self-start sm:self-auto">
+          Human Shift vs. LLM Shift (Indic &minus; West)
+        </span>
+      </div>
+
+      <!-- 3-Part Explainer Cards -->
+      <div class="bg-white border border-slate-200 rounded-2xl p-5 shadow-sm">
+        <div class="text-xs font-bold uppercase tracking-wider text-slate-500 mb-3">How This Test Works</div>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div class="p-4 rounded-xl bg-indigo-50/60 border border-indigo-100">
+            <div class="text-xs font-extrabold uppercase tracking-wider text-western mb-1.5">Why This Test Was Used</div>
+            <p class="text-xs sm:text-[13px] text-slate-700 leading-relaxed">
+              Separates real 3B agent degradation in Indic episodes from pure LLM judge bias.
+            </p>
+          </div>
+          <div class="p-4 rounded-xl bg-slate-50 border border-slate-200">
+            <div class="text-xs font-extrabold uppercase tracking-wider text-slate-800 mb-1.5">What It Is Doing</div>
+            <p class="text-xs sm:text-[13px] text-slate-700 leading-relaxed">
+              Compares the paired cultural shift (<code>Indic mean &minus; Western mean</code>) for Indian human raters against the shift produced by the <code>qwen2.5:3b</code> judge.
+            </p>
+          </div>
+          <div class="p-4 rounded-xl bg-teal-50/60 border border-teal-100">
+            <div class="text-xs font-extrabold uppercase tracking-wider text-human mb-1.5">What It Signifies</div>
+            <p class="text-xs sm:text-[13px] text-slate-700 leading-relaxed">
+              Both humans (<strong>-1.20, t-test p=0.0258</strong>) and the judge (<strong>-1.82</strong>) score Indic Goal lower due to real 3B agent flaws (role confusion, upward bargaining). However, on <strong>Secret Keeping (+0.64 human vs. -1.42 LLM)</strong> and <strong>Financial (+0.58 human vs. -0.42 LLM)</strong>, the judge penalizes Indic runs in the opposite direction of Indian raters.
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Chart: Cultural Score Shift -->
+      <div class="bg-white border border-slate-200 rounded-2xl p-5 sm:p-6 shadow-sm">
+        <div class="mb-4">
+          <h3 class="text-base font-bold text-slate-900">Human Shift (Indic &minus; West) vs. 3B Judge Shift (Indic &minus; West)</h3>
+          <p class="text-xs text-slate-500 mt-0.5">Opposite-direction bars on Secret Keeping and Financial highlight judge bias independent of agent quality.</p>
+        </div>
+        <div class="relative h-80 sm:h-96 w-full">
+          <canvas id="chartShift"></canvas>
+        </div>
+      </div>
+
+      <!-- Full Test 4 Statistical Table -->
+      <div class="bg-white border border-slate-200 rounded-2xl p-5 sm:p-6 shadow-sm">
+        <h3 class="text-base font-bold text-slate-900 mb-4">Test 4 Statistical Summary (n = 25 Paired Raters)</h3>
+        <div class="overflow-x-auto">
+          <table class="w-full text-xs sm:text-sm text-left border-collapse">
+            <thead>
+              <tr class="border-b border-slate-200 text-[11px] uppercase text-slate-500 bg-slate-50">
+                <th class="py-3 px-4 rounded-tl-xl font-semibold">Dimension</th>
+                <th class="py-3 px-3 text-right font-semibold">Human West</th>
+                <th class="py-3 px-3 text-right font-semibold">Human Indic</th>
+                <th class="py-3 px-3 text-right font-semibold text-human">Human Shift</th>
+                <th class="py-3 px-3 text-right font-semibold">Wilcoxon p</th>
+                <th class="py-3 px-3 text-right font-semibold">Paired t p</th>
+                <th class="py-3 px-4 text-right rounded-tr-xl font-semibold text-indic">LLM Shift</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-slate-100">
+              <tr class="hover:bg-slate-50">
+                <td class="py-3 px-4 font-semibold text-slate-800">Goal</td>
+                <td class="py-3 px-3 text-right">6.60</td>
+                <td class="py-3 px-3 text-right">5.40</td>
+                <td class="py-3 px-3 text-right font-bold text-human">-1.20</td>
+                <td class="py-3 px-3 text-right">0.0777</td>
+                <td class="py-3 px-3 text-right"><span class="px-2 py-0.5 rounded-full text-xs font-bold bg-teal-50 text-human border border-teal-200">0.0258*</span></td>
+                <td class="py-3 px-4 text-right font-bold text-indic">-1.82</td>
+              </tr>
+              <tr class="hover:bg-slate-50">
+                <td class="py-3 px-4 font-semibold text-slate-800">Believability</td>
+                <td class="py-3 px-3 text-right">6.76</td>
+                <td class="py-3 px-3 text-right">6.10</td>
+                <td class="py-3 px-3 text-right font-medium text-human">-0.66</td>
+                <td class="py-3 px-3 text-right text-slate-600">0.1108</td>
+                <td class="py-3 px-3 text-right text-slate-600">0.1394</td>
+                <td class="py-3 px-4 text-right font-medium text-indic">-0.42</td>
+              </tr>
+              <tr class="hover:bg-slate-50">
+                <td class="py-3 px-4 font-semibold text-slate-800">Relationship</td>
+                <td class="py-3 px-3 text-right">2.10</td>
+                <td class="py-3 px-3 text-right">1.58</td>
+                <td class="py-3 px-3 text-right font-medium text-human">-0.52</td>
+                <td class="py-3 px-3 text-right text-slate-600">0.2172</td>
+                <td class="py-3 px-3 text-right text-slate-600">0.1375</td>
+                <td class="py-3 px-4 text-right font-medium text-indic">+0.40</td>
+              </tr>
+              <tr class="hover:bg-slate-50">
+                <td class="py-3 px-4 font-semibold text-slate-800">Social Rules</td>
+                <td class="py-3 px-3 text-right">-2.20</td>
+                <td class="py-3 px-3 text-right">-2.18</td>
+                <td class="py-3 px-3 text-right text-slate-600">+0.02</td>
+                <td class="py-3 px-3 text-right text-slate-500">0.8085</td>
+                <td class="py-3 px-3 text-right text-slate-500">0.9539</td>
+                <td class="py-3 px-4 text-right text-slate-500">0.00</td>
+              </tr>
+              <tr class="hover:bg-slate-50 bg-orange-50/30">
+                <td class="py-3 px-4 font-semibold text-slate-800">Secret Keeping</td>
+                <td class="py-3 px-3 text-right">-3.46</td>
+                <td class="py-3 px-3 text-right">-2.82</td>
+                <td class="py-3 px-3 text-right font-bold text-human">+0.64</td>
+                <td class="py-3 px-3 text-right text-slate-600">0.2102</td>
+                <td class="py-3 px-3 text-right text-slate-600">0.2297</td>
+                <td class="py-3 px-4 text-right font-bold text-alert">-1.42</td>
+              </tr>
+              <tr class="hover:bg-slate-50 bg-orange-50/30">
+                <td class="py-3 px-4 font-semibold text-slate-800">Financial</td>
+                <td class="py-3 px-3 text-right">0.32</td>
+                <td class="py-3 px-3 text-right">0.90</td>
+                <td class="py-3 px-3 text-right font-bold text-human">+0.58</td>
+                <td class="py-3 px-3 text-right text-slate-600">0.1700</td>
+                <td class="py-3 px-3 text-right text-slate-600">0.1898</td>
+                <td class="py-3 px-4 text-right font-bold text-alert">-0.42</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Verbatim Indian Rater Qualitative Evidence Cards -->
+      <div>
+        <h3 class="text-lg font-bold text-slate-900 mb-3">Qualitative Evidence: Verbatim Indian Rater Notes</h3>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-5">
+          <!-- Form 3 Quote -->
+          <div class="bg-white border border-slate-200 rounded-2xl p-5 shadow-sm flex flex-col justify-between border-t-4 border-t-alert">
+            <div>
+              <div class="flex items-center justify-between gap-2 mb-3">
+                <span class="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-red-50 text-alert">Upward Bargaining &amp; 21K Leak</span>
+                <span class="text-xs font-medium text-slate-500">Form 3 &bull; Indic Ep. 12</span>
+              </div>
+              <blockquote class="text-sm text-slate-700 italic leading-relaxed">
+                &ldquo;The negotiation made no logical sense. The seller immediately leaked his secret target price (21K), and the buyer inexplicably bargained upward (offering 26–27K against a 24K offer) instead of negotiating down toward his 14K goal.&rdquo;
+              </blockquote>
+            </div>
+            <div class="mt-4 pt-3 border-t border-slate-100 text-xs text-slate-500 flex items-center justify-between">
+              <span class="font-semibold text-slate-700">Form 3 Rater (West Bengal)</span>
+              <span class="font-semibold text-alert">3B Judge Believability: 7 &amp; 9</span>
+            </div>
+          </div>
+
+          <!-- Form 4 Quote -->
+          <div class="bg-white border border-slate-200 rounded-2xl p-5 shadow-sm flex flex-col justify-between border-t-4 border-t-indic">
+            <div>
+              <div class="flex items-center justify-between gap-2 mb-3">
+                <span class="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-orange-50 text-indic">Role Confusion &amp; Abrupt Exit</span>
+                <span class="text-xs font-medium text-slate-500">Form 4 &bull; Indic Ep. 15</span>
+              </div>
+              <blockquote class="text-sm text-slate-700 italic leading-relaxed">
+                &ldquo;Both characters got confused during negotiation. Buyer acted like seller while seller rejected offer and left the chat. Repeating the line &lsquo;Porter was arriving in 5 min&rsquo; and ending convo so rudely felt unnatural and didn't match how people actually negotiate.&rdquo;
+              </blockquote>
+            </div>
+            <div class="mt-4 pt-3 border-t border-slate-100 text-xs text-slate-500 flex items-center justify-between">
+              <span class="font-semibold text-slate-700">Form 4 Rater</span>
+              <span class="font-semibold text-indic">3B Judge Believability: 8 &amp; 8</span>
+            </div>
+          </div>
+
+          <!-- Form 1 Quote -->
+          <div class="bg-white border border-slate-200 rounded-2xl p-5 shadow-sm flex flex-col justify-between border-t-4 border-t-western">
+            <div>
+              <div class="flex items-center justify-between gap-2 mb-3">
+                <span class="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-indigo-50 text-western">AI Glitches &amp; Premature Jump</span>
+                <span class="text-xs font-medium text-slate-500">Form 1 &bull; Ep. 0 &amp; 10</span>
+              </div>
+              <blockquote class="text-sm text-slate-700 italic leading-relaxed">
+                &ldquo;It has some clear AI glitches and Jordan literally gave his secret away... The seller should not have jumped to his target price just in one cycle of negotiation. The buyer was way far from his target price, so he should have given it some more time.&rdquo;
+              </blockquote>
+            </div>
+            <div class="mt-4 pt-3 border-t border-slate-100 text-xs text-slate-500 flex items-center justify-between">
+              <span class="font-semibold text-slate-700">Form 1 Raters (Delhi &amp; WB)</span>
+              <span class="font-semibold text-western">3B Judge Goal: 9 &amp; 9</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ==================== TAB 6: DATASET (100 ROWS) ==================== -->
+    <section id="tab6" class="tab-panel hidden space-y-6">
+      <div class="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-3">
+        <div>
+          <span class="text-xs font-bold uppercase tracking-wider text-western">Complete Raw Data &bull; Reproducibility</span>
+          <h2 class="text-2xl font-bold text-slate-900 mt-0.5">Dataset Explorer (100 Rows)</h2>
+          <p class="text-sm text-slate-600 mt-1">
+            All 100 exact evaluation records (<code>n = 25</code> Indian raters &times; 2 conversations &times; 2 agents) from <code>sotopia_indic_phase1_eval_dataset_25-v2.csv</code>.
+          </p>
+        </div>
+        <div class="flex flex-wrap items-center gap-2">
+          <span id="dsRowCount" class="inline-flex items-center px-3 py-1.5 rounded-full text-xs font-bold bg-indigo-50 text-western border border-indigo-200">
+            Showing 100 of 100 rows
+          </span>
+          <button type="button" id="dsResetBtn" class="px-3.5 py-2 rounded-xl text-xs font-semibold border border-slate-300 bg-white text-slate-700 hover:bg-slate-100 transition-colors cursor-pointer">
+            Reset Filters
+          </button>
+          <button type="button" id="dsExportBtn" class="px-3.5 py-2 rounded-xl text-xs font-semibold bg-human text-white hover:bg-teal-800 shadow-sm transition-colors cursor-pointer">
+            Export Filtered CSV
+          </button>
+        </div>
+      </div>
+
+      <!-- Controls Panel -->
+      <div class="bg-white border border-slate-200 rounded-2xl p-4 sm:p-5 shadow-sm space-y-4">
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+          <div>
+            <label for="dsSearch" class="block text-[11px] font-semibold uppercase tracking-wider text-slate-500 mb-1">Search</label>
+            <input
+              id="dsSearch"
+              type="text"
+              placeholder="Rater ID, Item ID, Episode..."
+              class="w-full px-3.5 py-2 rounded-xl border border-slate-300 text-sm text-slate-800 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500/30 focus:border-western"
+            />
+          </div>
+          <div>
+            <label for="dsFormFilter" class="block text-[11px] font-semibold uppercase tracking-wider text-slate-500 mb-1">Form</label>
+            <select id="dsFormFilter" class="w-full px-3 py-2 rounded-xl border border-slate-300 bg-white text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-500/30 focus:border-western">
+              <option value="ALL">All Forms (100)</option>
+              <option value="Form 1">Form 1 (40)</option>
+              <option value="Form 2">Form 2 (16)</option>
+              <option value="Form 3">Form 3 (36)</option>
+              <option value="Form 4">Form 4 (8)</option>
+            </select>
+          </div>
+          <div>
+            <label for="dsCultureFilter" class="block text-[11px] font-semibold uppercase tracking-wider text-slate-500 mb-1">Culture</label>
+            <select id="dsCultureFilter" class="w-full px-3 py-2 rounded-xl border border-slate-300 bg-white text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-500/30 focus:border-western">
+              <option value="ALL">All Cultures</option>
+              <option value="Western">Western</option>
+              <option value="Indic">Indic</option>
+            </select>
+          </div>
+          <div>
+            <label for="dsRoleFilter" class="block text-[11px] font-semibold uppercase tracking-wider text-slate-500 mb-1">Agent Role</label>
+            <select id="dsRoleFilter" class="w-full px-3 py-2 rounded-xl border border-slate-300 bg-white text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-500/30 focus:border-western">
+              <option value="ALL">All Roles</option>
+              <option value="A">A - Buyer</option>
+              <option value="B">B - Seller</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-3 pt-3 border-t border-slate-100">
+          <div class="flex flex-wrap items-center gap-1.5" role="group" aria-label="Score View Mode">
+            <span class="text-[11px] font-semibold uppercase tracking-wider text-slate-500 mr-1.5">Score View:</span>
+            <button type="button" data-mode="all" class="ds-mode-btn px-3 py-1.5 rounded-xl text-xs font-semibold transition-all cursor-pointer bg-western text-white shadow-sm">
+              Side-by-Side (All 18 Cols)
+            </button>
+            <button type="button" data-mode="human" class="ds-mode-btn px-3 py-1.5 rounded-xl text-xs font-semibold transition-all cursor-pointer bg-slate-100 text-slate-700 hover:bg-slate-200">
+              Human Scores Only
+            </button>
+            <button type="button" data-mode="llm" class="ds-mode-btn px-3 py-1.5 rounded-xl text-xs font-semibold transition-all cursor-pointer bg-slate-100 text-slate-700 hover:bg-slate-200">
+              3B LLM Scores Only
+            </button>
+            <button type="button" data-mode="error" class="ds-mode-btn px-3 py-1.5 rounded-xl text-xs font-semibold transition-all cursor-pointer bg-slate-100 text-slate-700 hover:bg-slate-200">
+              Signed Error (LLM &minus; Human)
+            </button>
+          </div>
+
+          <div id="dsErrorLegend" class="hidden flex items-center gap-3 text-xs text-slate-600">
+            <span class="inline-flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-sm bg-blue-600"></span>Positive = LLM Overestimates</span>
+            <span class="inline-flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-sm bg-red-600"></span>Negative = LLM Over-Penalizes</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Data Table Container -->
+      <div class="bg-white border border-slate-200 rounded-2xl shadow-sm overflow-hidden">
+        <div class="px-4 py-2.5 bg-slate-50 border-b border-slate-200 flex items-center justify-between text-xs text-slate-500">
+          <span>Click any column header to sort ascending / descending.</span>
+          <span id="dsSortStatus" class="font-medium text-slate-700">Sorted by: rater_id (asc)</span>
+        </div>
+        <div class="overflow-x-auto max-h-[600px] overflow-y-auto">
+          <table class="w-full text-xs text-left border-collapse whitespace-nowrap">
+            <thead id="dsTableHead" class="sticky top-0 z-10 bg-slate-100 border-b border-slate-200 shadow-sm"></thead>
+            <tbody id="dsTableBody" class="divide-y divide-slate-100"></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- ==================== FOOTER ==================== -->
+  <footer class="border-t border-slate-200 bg-white mt-12">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-5 flex flex-col sm:flex-row items-center justify-between gap-2 text-xs text-slate-500">
+      <span><strong>Sotopia-Indic</strong> &bull; B.Tech Final Year Project &bull; Phase 1 Statistical Evaluation</span>
+      <span>Dataset: <code>sotopia_indic_phase1_eval_dataset_25-v2.csv</code> (n = 25 raters, 100 evaluations)</span>
+    </div>
+  </footer>
+
+  <!-- ==================== SELF-CONTAINED APPLICATION SCRIPT ==================== -->
+  <script>
+    // ---------------- GLOBAL STATE & THEME TOKENS ----------------
+    const COLORS = {
+      western: '#312E81',
+      indic: '#C2410C',
+      human: '#0F766E',
+      alert: '#DC2626',
+      slate: '#64748B',
+      grid: '#E2E8F0',
+    };
+
+    const chartInstances = {};
+    let showingAll = false;
+    let activeTab = 'tabOverview';
+
+    // ---------------- TEST 1 HEATMAP TABLES ----------------
+    const iccData = [
+      { dim: 'Financial',      alpha:  0.433, f1:  0.575, f2:  0.689, f3:  0.229, f4:  0.000 },
+      { dim: 'Goal',           alpha:  0.349, f1:  0.386, f2:  0.452, f3:  0.177, f4:  0.602 },
+      { dim: 'Secret Keeping', alpha:  0.130, f1:  0.226, f2:  0.008, f3:  0.058, f4:  0.742 },
+      { dim: 'Relationship',   alpha:  0.117, f1: -0.084, f2:  0.184, f3: -0.011, f4: -0.089 },
+      { dim: 'Believability',  alpha:  0.109, f1: -0.040, f2:  0.000, f3: -0.047, f4:  0.260 },
+      { dim: 'Social Rules',   alpha: -0.024, f1: -0.047, f2:  0.010, f3: -0.015, f4: -0.022 },
+    ];
+
+    const sdData = [
+      { dim: 'Goal',           f1: 2.14, f2: 2.34, f3: 2.65, f4: 1.94 },
+      { dim: 'Believability',  f1: 2.36, f2: 2.10, f3: 2.35, f4: 1.41 },
+      { dim: 'Relationship',   f1: 1.84, f2: 1.49, f3: 1.68, f4: 1.94 },
+      { dim: 'Social Rules',   f1: 2.00, f2: 2.22, f3: 3.68, f4: 3.54 },
+      { dim: 'Secret Keeping', f1: 3.02, f2: 2.93, f3: 3.63, f4: 0.88 },
+      { dim: 'Financial',      f1: 2.15, f2: 1.10, f3: 2.72, f4: 1.77 },
+    ];
+
+    function getHeatClass(val) {
+      if (val >= 0.50) return 'bg-teal-100 text-teal-900 font-bold';
+      if (val >= 0.30) return 'bg-emerald-50 text-emerald-800 font-semibold';
+      if (val >= 0.10) return 'bg-amber-50 text-amber-800';
+      if (val >= 0.00) return 'bg-slate-50 text-slate-600';
+      return 'bg-red-50 text-red-700';
+    }
+
+    function getSdHeatClass(val) {
+      if (val >= 3.20) return 'bg-red-100 text-red-900 font-bold';
+      if (val >= 2.50) return 'bg-orange-100 text-orange-900 font-semibold';
+      if (val >= 1.80) return 'bg-amber-50 text-amber-800';
+      return 'bg-teal-50 text-teal-800 font-semibold';
+    }
+
+    function renderIccTables() {
+      const iccBody = document.getElementById('iccTableBody');
+      if (iccBody) {
+        iccBody.innerHTML = iccData.map(row => `
+          <tr class="hover:brightness-95 transition">
+            <td class="py-2.5 px-3 font-semibold text-slate-800 bg-white">${row.dim}</td>
+            <td class="py-2.5 px-2.5 text-center border-x border-slate-100 ${getHeatClass(row.alpha)}">${row.alpha.toFixed(3)}</td>
+            <td class="py-2.5 px-2.5 text-center ${getHeatClass(row.f1)}">${row.f1.toFixed(3)}</td>
+            <td class="py-2.5 px-2.5 text-center ${getHeatClass(row.f2)}">${row.f2.toFixed(3)}</td>
+            <td class="py-2.5 px-2.5 text-center ${getHeatClass(row.f3)}">${row.f3.toFixed(3)}</td>
+            <td class="py-2.5 px-2.5 text-center ${getHeatClass(row.f4)}">${row.f4.toFixed(3)}</td>
+          </tr>
+        `).join('');
+      }
+
+      const sdBody = document.getElementById('sdTableBody');
+      if (sdBody) {
+        sdBody.innerHTML = sdData.map(row => `
+          <tr class="hover:brightness-95 transition">
+            <td class="py-2.5 px-3 font-semibold text-slate-800 bg-white">${row.dim}</td>
+            <td class="py-2.5 px-2 text-center ${getSdHeatClass(row.f1)}">${row.f1.toFixed(2)}</td>
+            <td class="py-2.5 px-2 text-center ${getSdHeatClass(row.f2)}">${row.f2.toFixed(2)}</td>
+            <td class="py-2.5 px-2 text-center ${getSdHeatClass(row.f3)}">${row.f3.toFixed(2)}</td>
+            <td class="py-2.5 px-2 text-center ${getSdHeatClass(row.f4)}">${row.f4.toFixed(2)}</td>
+          </tr>
+        `).join('');
+      }
+    }
+
+    // ---------------- SAFE CHART.JS INITIALIZERS ----------------
+    const moderateLinePlugin = {
+      id: 'moderateLine',
+      afterDatasetsDraw(chart) {
+        const { ctx, chartArea, scales } = chart;
+        if (!chartArea || !scales || !scales.x) return;
+        const xPos = scales.x.getPixelForValue(0.40);
+        ctx.save();
+        ctx.beginPath();
+        ctx.setLineDash([5, 4]);
+        ctx.strokeStyle = COLORS.human;
+        ctx.lineWidth = 1.5;
+        ctx.moveTo(xPos, chartArea.top);
+        ctx.lineTo(xPos, chartArea.bottom);
+        ctx.stroke();
+        ctx.fillStyle = COLORS.human;
+        ctx.font = "600 10px 'Inter', sans-serif";
+        ctx.textAlign = 'right';
+        ctx.fillText('0.40 Moderate', xPos - 5, chartArea.top + 14);
+        ctx.restore();
+      },
+    };
+
+    function initTab1Charts() {
+      if (typeof Chart === 'undefined' || chartInstances.alpha) return;
+      try {
+        const el = document.getElementById('chartAlpha');
+        if (!el) return;
+        const vals = [0.433, 0.349, 0.130, 0.117, 0.109, -0.024];
+        chartInstances.alpha = new Chart(el.getContext('2d'), {
+          type: 'bar',
+          plugins: [moderateLinePlugin],
+          data: {
+            labels: ['Financial', 'Goal', 'Secret Keeping', 'Relationship', 'Believability', 'Social Rules'],
+            datasets: [{
+              label: "Krippendorff's α",
+              data: vals,
+              backgroundColor: vals.map(v => v >= 0.30 ? COLORS.human : (v >= 0 ? COLORS.slate : COLORS.alert)),
+              borderRadius: 6,
+              barThickness: 26,
+            }],
+          },
+          options: {
+            indexAxis: 'y',
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+              legend: { display: false },
+              tooltip: {
+                callbacks: {
+                  label: (ctx) => ` Pooled α: ${ctx.raw >= 0 ? '+' : ''}${ctx.raw.toFixed(3)}`,
+                },
+              },
+            },
+            scales: {
+              x: {
+                min: -0.10,
+                max: 0.52,
+                grid: { color: COLORS.grid },
+                title: { display: true, text: "Pooled Krippendorff's α (16 Items × 25 Raters)", font: { size: 11, weight: '600' } },
+              },
+              y: {
+                grid: { display: false },
+                ticks: { font: { weight: '600' } },
+              },
+            },
+          },
+        });
+      } catch (err) {
+        console.error('Error initializing Test 1 chart:', err);
+      }
+    }
+
+    function initTab2Charts() {
+      if (typeof Chart === 'undefined') return;
+      if (!chartInstances.bias) {
+        try {
+          const elBias = document.getElementById('chartBias');
+          if (elBias) {
+            const biasVals = [2.84, 2.19, 1.90, 1.87, 0.20, -0.95];
+            const pLabels = ['p=0.0001***', 'p=0.0001***', 'p=0.0001***', 'p=0.0003***', 'ns (p=0.6168)', 'ns (p=0.3123)'];
+            chartInstances.bias = new Chart(elBias.getContext('2d'), {
+              type: 'bar',
+              data: {
+                labels: ['Financial', 'Social Rules', 'Believability', 'Goal', 'Relationship', 'Secret Keeping'],
+                datasets: [{
+                  label: 'Signed Bias (LLM − Human)',
+                  data: biasVals,
+                  backgroundColor: biasVals.map((v, i) => i < 4 ? COLORS.western : (v < 0 ? COLORS.alert : '#94A3B8')),
+                  borderRadius: 6,
+                  barThickness: 26,
+                }],
+              },
+              options: {
+                indexAxis: 'y',
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                  legend: { display: false },
+                  tooltip: {
+                    callbacks: {
+                      label: (ctx) => ` Bias: ${ctx.raw >= 0 ? '+' : ''}${ctx.raw.toFixed(2)} pts | ${pLabels[ctx.dataIndex]}`,
+                    },
+                  },
+                },
+                scales: {
+                  x: {
+                    min: -1.6,
+                    max: 3.4,
+                    grid: { color: COLORS.grid },
+                    title: { display: true, text: 'Mean Signed Bias: LLM − Human (pts)', font: { size: 11, weight: '600' } },
+                  },
+                  y: {
+                    grid: { display: false },
+                    ticks: { font: { weight: '600' } },
+                  },
+                },
+              },
+            });
+          }
+        } catch (err) {
+          console.error('Error initializing Test 2 bias chart:', err);
+        }
+      }
+
+      if (!chartInstances.spearman) {
+        try {
+          const elRho = document.getElementById('chartSpearman');
+          if (elRho) {
+            chartInstances.spearman = new Chart(elRho.getContext('2d'), {
+              type: 'bar',
+              data: {
+                labels: ['Believability', 'Goal', 'Relationship', 'Financial', 'Secret Keeping'],
+                datasets: [
+                  {
+                    label: 'Western (8 items)',
+                    data: [0.48, 0.35, 0.22, -0.26, -0.52],
+                    backgroundColor: COLORS.western,
+                    borderRadius: 5,
+                  },
+                  {
+                    label: 'Indic (8 items)',
+                    data: [-0.15, -0.10, 0.31, -0.28, -0.16],
+                    backgroundColor: COLORS.indic,
+                    borderRadius: 5,
+                  },
+                ],
+              },
+              options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                  legend: { position: 'top', labels: { usePointStyle: true, boxWidth: 10, font: { weight: '600' } } },
+                  tooltip: {
+                    callbacks: {
+                      label: (ctx) => ` ${ctx.dataset.label}: ρ = ${ctx.raw >= 0 ? '+' : ''}${ctx.raw.toFixed(2)}`,
+                    },
+                  },
+                },
+                scales: {
+                  y: {
+                    min: -0.65,
+                    max: 0.65,
+                    grid: { color: COLORS.grid },
+                    title: { display: true, text: 'Spearman Rank Correlation (ρ)', font: { size: 11, weight: '600' } },
+                  },
+                  x: {
+                    grid: { display: false },
+                    ticks: { font: { weight: '600' } },
+                  },
+                },
+              },
+            });
+          }
+        } catch (err) {
+          console.error('Error initializing Test 2 Spearman chart:', err);
+        }
+      }
+    }
+
+    function initTab3Charts() {
+      if (typeof Chart === 'undefined') return;
+      if (!chartInstances.mae) {
+        try {
+          const elMae = document.getElementById('chartMAE');
+          if (elMae) {
+            const dzVals = ['+0.37', '+0.32', '+0.33', '-0.01', '-0.06', '-0.31', '+0.22'];
+            chartInstances.mae = new Chart(elMae.getContext('2d'), {
+              type: 'bar',
+              data: {
+                labels: ['Goal', 'Believability', 'Relationship', 'Social Rules', 'Secret Keeping', 'Financial', 'Composite (All 6)'],
+                datasets: [
+                  {
+                    label: 'Western MAE (4 eps, 50 evals)',
+                    data: [2.54, 2.14, 2.58, 2.20, 4.04, 4.26, 2.96],
+                    backgroundColor: COLORS.western,
+                    borderRadius: 6,
+                  },
+                  {
+                    label: 'Indic MAE (4 eps, 50 evals)',
+                    data: [3.36, 2.70, 3.38, 2.18, 3.86, 3.62, 3.18],
+                    backgroundColor: COLORS.indic,
+                    borderRadius: 6,
+                  },
+                ],
+              },
+              options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                  legend: { position: 'top', labels: { usePointStyle: true, boxWidth: 10, font: { weight: '600' } } },
+                  tooltip: {
+                    callbacks: {
+                      afterBody: (items) => `Effect size (Cohen's dz): ${dzVals[items[0].dataIndex]}`,
+                    },
+                  },
+                },
+                scales: {
+                  y: {
+                    beginAtZero: true,
+                    max: 5.0,
+                    grid: { color: COLORS.grid },
+                    title: { display: true, text: 'Mean Absolute Error |LLM − Human|', font: { size: 11, weight: '600' } },
+                  },
+                  x: {
+                    grid: { display: false },
+                    ticks: { font: { weight: '600' } },
+                  },
+                },
+              },
+            });
+          }
+        } catch (err) {
+          console.error('Error initializing Test 3 MAE chart:', err);
+        }
+      }
+
+      if (!chartInstances.deltaMae) {
+        try {
+          const elDelta = document.getElementById('chartDeltaMAE');
+          if (elDelta) {
+            const diffs = [0.82, 0.80, 0.56, 0.22, -0.02, -0.18, -0.64];
+            const meta = [
+              'dz=+0.37, p=0.084',
+              'dz=+0.33, p=0.103',
+              'dz=+0.32, p=0.119',
+              'dz=+0.22, p=0.369',
+              'dz=-0.01, p=0.809',
+              'dz=-0.06, p=0.474',
+              'dz=-0.31, p=0.152',
+            ];
+            chartInstances.deltaMae = new Chart(elDelta.getContext('2d'), {
+              type: 'bar',
+              data: {
+                labels: ['Goal', 'Relationship', 'Believability', 'Composite (All 6)', 'Social Rules', 'Secret Keeping', 'Financial'],
+                datasets: [{
+                  label: 'ΔMAE (Indic − Western)',
+                  data: diffs,
+                  backgroundColor: diffs.map(v => v > 0 ? COLORS.indic : COLORS.western),
+                  borderRadius: 6,
+                  barThickness: 22,
+                }],
+              },
+              options: {
+                indexAxis: 'y',
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                  legend: { display: false },
+                  tooltip: {
+                    callbacks: {
+                      label: (ctx) => ` ΔMAE: ${ctx.raw >= 0 ? '+' : ''}${ctx.raw.toFixed(2)} pts (${meta[ctx.dataIndex]})`,
+                    },
+                  },
+                },
+                scales: {
+                  x: {
+                    min: -0.9,
+                    max: 1.1,
+                    grid: { color: COLORS.grid },
+                    title: { display: true, text: 'Paired ΔMAE: Indic − Western (pts)', font: { size: 11, weight: '600' } },
+                  },
+                  y: {
+                    grid: { display: false },
+                    ticks: { font: { weight: '600' } },
+                  },
+                },
+              },
+            });
+          }
+        } catch (err) {
+          console.error('Error initializing Test 3 Delta MAE chart:', err);
+        }
+      }
+    }
+
+    function initTab4Charts() {
+      if (typeof Chart === 'undefined' || chartInstances.shift) return;
+      try {
+        const elShift = document.getElementById('chartShift');
+        if (!elShift) return;
+        chartInstances.shift = new Chart(elShift.getContext('2d'), {
+          type: 'bar',
+          data: {
+            labels: ['Goal', 'Believability', 'Relationship', 'Social Rules', 'Secret Keeping', 'Financial'],
+            datasets: [
+              {
+                label: 'Indian Humans (Indic − West)',
+                data: [-1.20, -0.66, -0.52, 0.02, 0.64, 0.58],
+                backgroundColor: COLORS.human,
+                borderRadius: 6,
+              },
+              {
+                label: '3B LLM Judge (Indic − West)',
+                data: [-1.82, -0.42, 0.40, 0.00, -1.42, -0.42],
+                backgroundColor: COLORS.indic,
+                borderRadius: 6,
+              },
+            ],
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+              legend: { position: 'top', labels: { usePointStyle: true, boxWidth: 10, font: { weight: '600' } } },
+              tooltip: {
+                callbacks: {
+                  label: (ctx) => ` ${ctx.dataset.label}: ${ctx.raw >= 0 ? '+' : ''}${ctx.raw.toFixed(2)} pts`,
+                },
+              },
+            },
+            scales: {
+              y: {
+                min: -2.2,
+                max: 1.2,
+                grid: { color: COLORS.grid },
+                title: { display: true, text: 'Mean Score Shift (Indic − Western)', font: { size: 11, weight: '600' } },
+              },
+              x: {
+                grid: { display: false },
+                ticks: { font: { weight: '600' } },
+              },
+            },
+          },
+        });
+      } catch (err) {
+        console.error('Error initializing Test 4 chart:', err);
+      }
+    }
+
+    function initChartsForTab(tabId) {
+      if (tabId === 'tab1') initTab1Charts();
+      if (tabId === 'tab2') initTab2Charts();
+      if (tabId === 'tab3') initTab3Charts();
+      if (tabId === 'tab4') initTab4Charts();
+    }
+
+    function resizeVisibleCharts() {
+      requestAnimationFrame(() => {
+        Object.values(chartInstances).forEach(ch => {
+          try {
+            if (ch && typeof ch.resize === 'function') ch.resize();
+          } catch (err) {
+            console.error('Chart resize error:', err);
+          }
+        });
+      });
+    }
+
+    // ---------------- BULLETPROOF TAB SWITCHING ----------------
+    function switchTab(tabId, skipScroll) {
+      showingAll = false;
+      activeTab = tabId;
+
+      const toggleAllBtn = document.getElementById('toggleAllBtn');
+      const toggleAllLabel = document.getElementById('toggleAllLabel');
+      if (toggleAllLabel) toggleAllLabel.textContent = 'Show All Sections';
+      if (toggleAllBtn) {
+        toggleAllBtn.classList.remove('bg-western', 'text-white');
+        toggleAllBtn.classList.add('text-western', 'bg-indigo-50/70');
+      }
+
+      document.querySelectorAll('.tab-btn').forEach(btn => {
+        const isSelected = btn.dataset.tab === tabId;
+        btn.classList.toggle('bg-western', isSelected);
+        btn.classList.toggle('text-white', isSelected);
+        btn.classList.toggle('shadow-sm', isSelected);
+        btn.classList.toggle('text-slate-600', !isSelected);
+        btn.classList.toggle('hover:bg-slate-100', !isSelected);
+        btn.setAttribute('aria-selected', isSelected ? 'true' : 'false');
+      });
+
+      document.querySelectorAll('.tab-panel').forEach(panel => {
+        panel.classList.toggle('hidden', panel.id !== tabId);
+      });
+
+      // Initialize charts AFTER panel is unhidden so canvas has real dimensions
+      initChartsForTab(tabId);
+      resizeVisibleCharts();
+
+      if (!skipScroll) {
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      }
+    }
+
+    function toggleAllSections() {
+      showingAll = !showingAll;
+      const toggleAllBtn = document.getElementById('toggleAllBtn');
+      const toggleAllLabel = document.getElementById('toggleAllLabel');
+
+      if (showingAll) {
+        if (toggleAllLabel) toggleAllLabel.textContent = 'Tabbed View';
+        if (toggleAllBtn) {
+          toggleAllBtn.classList.add('bg-western', 'text-white');
+          toggleAllBtn.classList.remove('text-western', 'bg-indigo-50/70');
+        }
+        document.querySelectorAll('.tab-btn').forEach(btn => {
+          btn.classList.remove('bg-western', 'text-white', 'shadow-sm');
+          btn.classList.add('text-slate-600', 'hover:bg-slate-100');
+          btn.setAttribute('aria-selected', 'false');
+        });
+        document.querySelectorAll('.tab-panel').forEach(panel => {
+          panel.classList.remove('hidden');
+        });
+        ['tab1', 'tab2', 'tab3', 'tab4'].forEach(initChartsForTab);
+        resizeVisibleCharts();
+      } else {
+        switchTab(activeTab, true);
+      }
+    }
+
+    // Expose globally for onclick attributes
+    window.switchTab = switchTab;
+    window.toggleAllSections = toggleAllSections;
+
+    // ---------------- COMPLETE 100-ROW DATASET EXPLORER ----------------
+    const RAW_DATASET_CSV = `rater_id,form,episode_idx,item_id,culture,agent_role,human_goal,human_believability,human_relationship,human_social_rules,human_secret,human_financial_and_material_benefits,llm_goal,llm_believability,llm_relationship,llm_social_rules,llm_secret,llm_financial_and_material_benefits
+R01,Form 1,0,0_A,Western,A,4,7,2,0,0,-4,9,8,3,0,-3,5
+R01,Form 1,0,0_B,Western,B,8,7,0,0,-8,-2,9,9,3,0,-2,4
+R01,Form 1,10,10_A,Indic,A,4,6,0,0,0,-4,9,8,5,0,-3,5
+R01,Form 1,10,10_B,Indic,B,10,8,0,0,0,5,8,9,5,0,-1,5
+R02,Form 1,0,0_A,Western,A,4,2,3,-4,-6,-3,9,8,3,0,-3,5
+R02,Form 1,0,0_B,Western,B,4,4,3,0,-5,0,9,9,3,0,-2,4
+R02,Form 1,10,10_A,Indic,A,4,4,0,-6,-6,2,9,8,5,0,-3,5
+R02,Form 1,10,10_B,Indic,B,6,2,2,-6,-2,3,8,9,5,0,-1,5
+R03,Form 1,0,0_A,Western,A,5,8,3,0,0,-2,9,8,3,0,-3,5
+R03,Form 1,0,0_B,Western,B,9,8,3,0,-3,-2,9,9,3,0,-2,4
+R03,Form 1,10,10_A,Indic,A,6,9,3,0,-4,-4,9,8,5,0,-3,5
+R03,Form 1,10,10_B,Indic,B,10,8,3,0,0,2,8,9,5,0,-1,5
+R04,Form 1,0,0_A,Western,A,7,8,1,-4,-5,4,9,8,3,0,-3,5
+R04,Form 1,0,0_B,Western,B,6,7,4,-8,-8,-1,9,9,3,0,-2,4
+R04,Form 1,10,10_A,Indic,A,6,5,3,-4,-9,-1,9,8,5,0,-3,5
+R04,Form 1,10,10_B,Indic,B,6,8,-1,0,-8,2,8,9,5,0,-1,5
+R05,Form 1,0,0_A,Western,A,6,6,1,-1,-5,-3,9,8,3,0,-3,5
+R05,Form 1,0,0_B,Western,B,9,9,2,-1,-7,-3,9,9,3,0,-2,4
+R05,Form 1,10,10_A,Indic,A,7,7,3,-2,-8,-2,9,8,5,0,-3,5
+R05,Form 1,10,10_B,Indic,B,8,7,2,-1,-2,3,8,9,5,0,-1,5
+R06,Form 1,0,0_A,Western,A,8,1,-3,-1,0,-3,9,8,3,0,-3,5
+R06,Form 1,0,0_B,Western,B,7,7,2,-1,0,2,9,9,3,0,-2,4
+R06,Form 1,10,10_A,Indic,A,1,2,-3,0,-4,-4,9,8,5,0,-3,5
+R06,Form 1,10,10_B,Indic,B,9,6,3,0,0,4,8,9,5,0,-1,5
+R07,Form 1,0,0_A,Western,A,5,6,2,0,0,-3,9,8,3,0,-3,5
+R07,Form 1,0,0_B,Western,B,9,3,-1,-3,-8,4,9,9,3,0,-2,4
+R07,Form 1,10,10_A,Indic,A,3,4,2,0,0,-4,9,8,5,0,-3,5
+R07,Form 1,10,10_B,Indic,B,10,2,1,-1,0,4,8,9,5,0,-1,5
+R08,Form 1,0,0_A,Western,A,5,4,1,0,-2,-4,9,8,3,0,-3,5
+R08,Form 1,0,0_B,Western,B,8,3,-3,-2,0,-1,9,9,3,0,-2,4
+R08,Form 1,10,10_A,Indic,A,3,4,2,0,0,1,9,8,5,0,-3,5
+R08,Form 1,10,10_B,Indic,B,2,3,0,0,0,1,8,9,5,0,-1,5
+R09,Form 1,0,0_A,Western,A,8,6,1,-2,-7,-4,9,8,3,0,-3,5
+R09,Form 1,0,0_B,Western,B,9,4,2,-1,-8,4,9,9,3,0,-2,4
+R09,Form 1,10,10_A,Indic,A,7,3,1,-1,-5,-2,9,8,5,0,-3,5
+R09,Form 1,10,10_B,Indic,B,8,4,1,-1,0,4,8,9,5,0,-1,5
+R10,Form 1,0,0_A,Western,A,2,6,4,0,-2,-3,9,8,3,0,-3,5
+R10,Form 1,0,0_B,Western,B,8,4,4,0,-9,3,9,9,3,0,-2,4
+R10,Form 1,10,10_A,Indic,A,0,8,1,0,-1,-5,9,8,5,0,-3,5
+R10,Form 1,10,10_B,Indic,B,10,8,1,-1,-1,4,8,9,5,0,-1,5
+R11,Form 2,11,11_A,Indic,A,8,8,2,-2,-6,0,3,8,5,0,-10,-3
+R11,Form 2,11,11_B,Indic,B,8,5,1,-5,-6,0,7,7,-3,0,-3,4
+R11,Form 2,2,2_A,Western,A,4,5,1,-5,-6,-3,9,8,-2,0,-10,5
+R11,Form 2,2,2_B,Western,B,9,8,2,-6,-5,2,10,10,-5,0,-10,0
+R12,Form 2,11,11_A,Indic,A,1,5,0,0,0,0,3,8,5,0,-10,-3
+R12,Form 2,11,11_B,Indic,B,0,5,0,0,0,0,7,7,-3,0,-3,4
+R12,Form 2,2,2_A,Western,A,3,10,0,0,0,-3,9,8,-2,0,-10,5
+R12,Form 2,2,2_B,Western,B,10,10,0,0,0,5,10,10,-5,0,-10,0
+R13,Form 2,11,11_A,Indic,A,3,7,2,0,0,0,3,8,5,0,-10,-3
+R13,Form 2,11,11_B,Indic,B,7,7,0,-2,0,0,7,7,-3,0,-3,4
+R13,Form 2,2,2_A,Western,A,4,7,3,0,-5,2,9,8,-2,0,-10,5
+R13,Form 2,2,2_B,Western,B,8,7,3,0,0,4,10,10,-5,0,-10,0
+R14,Form 2,11,11_A,Indic,A,0,10,0,0,0,0,3,8,5,0,-10,-3
+R14,Form 2,11,11_B,Indic,B,0,10,0,0,0,0,7,7,-3,0,-3,4
+R14,Form 2,2,2_A,Western,A,4,10,5,0,0,-5,9,8,-2,0,-10,5
+R14,Form 2,2,2_B,Western,B,10,10,5,0,0,5,10,10,-5,0,-10,0
+R15,Form 3,4,4_A,Western,A,9,5,4,-7,-7,5,9,8,4,0,-3,5
+R15,Form 3,4,4_B,Western,B,8,9,5,-9,-9,4,8,9,4,0,0,4
+R15,Form 3,12,12_A,Indic,A,10,10,4,-9,-8,3,6,7,0,0,-2,3
+R15,Form 3,12,12_B,Indic,B,10,10,5,-7,-10,5,6,9,0,0,-10,3
+R16,Form 3,4,4_A,Western,A,5,5,0,-1,0,0,9,8,4,0,-3,5
+R16,Form 3,4,4_B,Western,B,5,5,0,0,0,0,8,9,4,0,0,4
+R16,Form 3,12,12_A,Indic,A,5,5,0,0,0,1,6,7,0,0,-2,3
+R16,Form 3,12,12_B,Indic,B,5,5,0,-1,0,2,6,9,0,0,-10,3
+R17,Form 3,4,4_A,Western,A,6,6,2,-3,-4,2,9,8,4,0,-3,5
+R17,Form 3,4,4_B,Western,B,5,4,3,-3,-4,3,8,9,4,0,0,4
+R17,Form 3,12,12_A,Indic,A,0,8,3,0,0,-5,6,7,0,0,-2,3
+R17,Form 3,12,12_B,Indic,B,10,8,3,0,-10,1,6,9,0,0,-10,3
+R18,Form 3,4,4_A,Western,A,0,9,2,0,0,-5,9,8,4,0,-3,5
+R18,Form 3,4,4_B,Western,B,10,9,2,0,0,5,8,9,4,0,0,4
+R18,Form 3,12,12_A,Indic,A,2,9,2,0,0,-5,6,7,0,0,-2,3
+R18,Form 3,12,12_B,Indic,B,10,9,2,0,0,5,6,9,0,0,-10,3
+R19,Form 3,4,4_A,Western,A,8,8,4,-6,-2,-3,9,8,4,0,-3,5
+R19,Form 3,4,4_B,Western,B,9,10,1,-2,-9,3,8,9,4,0,0,4
+R19,Form 3,12,12_A,Indic,A,5,7,3,-9,-9,1,6,7,0,0,-2,3
+R19,Form 3,12,12_B,Indic,B,8,10,5,-6,-8,1,6,9,0,0,-10,3
+R20,Form 3,4,4_A,Western,A,9,9,5,0,0,5,9,8,4,0,-3,5
+R20,Form 3,4,4_B,Western,B,10,10,5,0,0,5,8,9,4,0,0,4
+R20,Form 3,12,12_A,Indic,A,10,10,5,-1,-3,3,6,7,0,0,-2,3
+R20,Form 3,12,12_B,Indic,B,8,6,4,-3,-4,5,6,9,0,0,-10,3
+R21,Form 3,4,4_A,Western,A,7,7,5,-9,-9,1,9,8,4,0,-3,5
+R21,Form 3,4,4_B,Western,B,9,10,4,-10,-7,4,8,9,4,0,0,4
+R21,Form 3,12,12_A,Indic,A,6,6,1,-8,-3,4,6,7,0,0,-2,3
+R21,Form 3,12,12_B,Indic,B,6,2,5,-9,-6,4,6,9,0,0,-10,3
+R22,Form 3,4,4_A,Western,A,2,8,2,0,-2,-3,9,8,4,0,-3,5
+R22,Form 3,4,4_B,Western,B,10,7,1,-1,0,5,8,9,4,0,0,4
+R22,Form 3,12,12_A,Indic,A,2,3,2,-1,-1,-4,6,7,0,0,-2,3
+R22,Form 3,12,12_B,Indic,B,10,2,2,-1,-9,5,6,9,0,0,-10,3
+R23,Form 3,4,4_A,Western,A,6,8,3,-2,-5,4,9,8,4,0,-3,5
+R23,Form 3,4,4_B,Western,B,6,7,3,-6,-3,3,8,9,4,0,0,4
+R23,Form 3,12,12_A,Indic,A,7,6,3,-5,-4,4,6,7,0,0,-2,3
+R23,Form 3,12,12_B,Indic,B,7,9,2,-5,-4,4,6,9,0,0,-10,3
+R24,Form 4,15,15_A,Indic,A,2,3,2,-5,0,2,6,8,5,0,-10,-3
+R24,Form 4,15,15_B,Indic,B,0,8,0,-5,0,0,9,8,-3,0,-10,5
+R24,Form 4,8,8_A,Western,A,7,7,3,-9,0,-4,6,8,-3,0,-3,-2
+R24,Form 4,8,8_B,Western,B,9,6,-4,-3,-9,-4,9,8,-3,0,-3,-2
+R25,Form 4,15,15_A,Indic,A,0,2,-1,0,0,0,6,8,5,0,-10,-3
+R25,Form 4,15,15_B,Indic,B,0,2,-2,-2,0,0,9,8,-3,0,-10,5
+R25,Form 4,8,8_A,Western,A,3,7,3,0,0,0,6,8,-3,0,-3,-2
+R25,Form 4,8,8_B,Western,B,4,5,2,0,-4,0,9,8,-3,0,-3,-2`;
+
+    const CSV_HEADERS = [
+      'rater_id', 'form', 'episode_idx', 'item_id', 'culture', 'agent_role',
+      'human_goal', 'human_believability', 'human_relationship', 'human_social_rules', 'human_secret', 'human_financial_and_material_benefits',
+      'llm_goal', 'llm_believability', 'llm_relationship', 'llm_social_rules', 'llm_secret', 'llm_financial_and_material_benefits'
+    ];
+
+    const DATASET_ROWS = (() => {
+      const lines = RAW_DATASET_CSV.trim().split('\n');
+      return lines.slice(1).map(line => {
+        const p = line.split(',');
+        const row = {
+          rater_id: p[0],
+          form: p[1],
+          episode_idx: Number(p[2]),
+          item_id: p[3],
+          culture: p[4],
+          agent_role: p[5],
+          human_goal: Number(p[6]),
+          human_believability: Number(p[7]),
+          human_relationship: Number(p[8]),
+          human_social_rules: Number(p[9]),
+          human_secret: Number(p[10]),
+          human_financial_and_material_benefits: Number(p[11]),
+          llm_goal: Number(p[12]),
+          llm_believability: Number(p[13]),
+          llm_relationship: Number(p[14]),
+          llm_social_rules: Number(p[15]),
+          llm_secret: Number(p[16]),
+          llm_financial_and_material_benefits: Number(p[17]),
+        };
+        row.err_goal = row.llm_goal - row.human_goal;
+        row.err_believability = row.llm_believability - row.human_believability;
+        row.err_relationship = row.llm_relationship - row.human_relationship;
+        row.err_social_rules = row.llm_social_rules - row.human_social_rules;
+        row.err_secret = row.llm_secret - row.human_secret;
+        row.err_financial_and_material_benefits = row.llm_financial_and_material_benefits - row.human_financial_and_material_benefits;
+        return row;
+      });
+    })();
+
+    const dsState = {
+      search: '',
+      form: 'ALL',
+      culture: 'ALL',
+      role: 'ALL',
+      mode: 'all',
+      sortKey: 'rater_id',
+      sortDir: 'asc',
+    };
+
+    const BASE_COLS = [
+      { key: 'rater_id', label: 'Rater', align: 'left' },
+      { key: 'form', label: 'Form', align: 'left' },
+      { key: 'episode_idx', label: 'Ep.', align: 'right' },
+      { key: 'item_id', label: 'Item ID', align: 'left' },
+      { key: 'culture', label: 'Culture', align: 'left' },
+      { key: 'agent_role', label: 'Role', align: 'center' },
+    ];
+
+    const HUMAN_COLS = [
+      { key: 'human_goal', label: 'H: Goal', align: 'right', group: 'human' },
+      { key: 'human_believability', label: 'H: Believ.', align: 'right', group: 'human' },
+      { key: 'human_relationship', label: 'H: Relat.', align: 'right', group: 'human' },
+      { key: 'human_social_rules', label: 'H: Soc.', align: 'right', group: 'human' },
+      { key: 'human_secret', label: 'H: Secret', align: 'right', group: 'human' },
+      { key: 'human_financial_and_material_benefits', label: 'H: Fin.', align: 'right', group: 'human' },
+    ];
+
+    const LLM_COLS = [
+      { key: 'llm_goal', label: 'LLM: Goal', align: 'right', group: 'llm' },
+      { key: 'llm_believability', label: 'LLM: Believ.', align: 'right', group: 'llm' },
+      { key: 'llm_relationship', label: 'LLM: Relat.', align: 'right', group: 'llm' },
+      { key: 'llm_social_rules', label: 'LLM: Soc.', align: 'right', group: 'llm' },
+      { key: 'llm_secret', label: 'LLM: Secret', align: 'right', group: 'llm' },
+      { key: 'llm_financial_and_material_benefits', label: 'LLM: Fin.', align: 'right', group: 'llm' },
+    ];
+
+    const ERR_COLS = [
+      { key: 'err_goal', label: 'Δ Goal', align: 'right', group: 'error' },
+      { key: 'err_believability', label: 'Δ Believ.', align: 'right', group: 'error' },
+      { key: 'err_relationship', label: 'Δ Relat.', align: 'right', group: 'error' },
+      { key: 'err_social_rules', label: 'Δ Soc.', align: 'right', group: 'error' },
+      { key: 'err_secret', label: 'Δ Secret', align: 'right', group: 'error' },
+      { key: 'err_financial_and_material_benefits', label: 'Δ Fin.', align: 'right', group: 'error' },
+    ];
+
+    function getVisibleColumns() {
+      if (dsState.mode === 'human') return [...BASE_COLS, ...HUMAN_COLS];
+      if (dsState.mode === 'llm') return [...BASE_COLS, ...LLM_COLS];
+      if (dsState.mode === 'error') return [...BASE_COLS, ...ERR_COLS];
+      return [...BASE_COLS, ...HUMAN_COLS, ...LLM_COLS];
+    }
+
+    function getFilteredSortedRows() {
+      const q = dsState.search.trim().toLowerCase();
+      const filtered = DATASET_ROWS.filter(r => {
+        if (dsState.form !== 'ALL' && r.form !== dsState.form) return false;
+        if (dsState.culture !== 'ALL' && r.culture !== dsState.culture) return false;
+        if (dsState.role !== 'ALL' && r.agent_role !== dsState.role) return false;
+        if (q) {
+          const match =
+            r.rater_id.toLowerCase().includes(q) ||
+            r.item_id.toLowerCase().includes(q) ||
+            String(r.episode_idx).includes(q) ||
+            r.form.toLowerCase().includes(q) ||
+            r.culture.toLowerCase().includes(q);
+          if (!match) return false;
+        }
+        return true;
+      });
+
+      const key = dsState.sortKey;
+      const mult = dsState.sortDir === 'asc' ? 1 : -1;
+      filtered.sort((a, b) => {
+        const va = a[key];
+        const vb = b[key];
+        if (typeof va === 'number' && typeof vb === 'number') {
+          return (va - vb) * mult;
+        }
+        return String(va).localeCompare(String(vb), undefined, { numeric: true }) * mult;
+      });
+      return filtered;
+    }
+
+    function getFormBadge(form) {
+      const map = {
+        'Form 1': 'bg-slate-100 text-slate-700 border-slate-200',
+        'Form 2': 'bg-teal-50 text-teal-800 border-teal-200',
+        'Form 3': 'bg-violet-50 text-violet-800 border-violet-200',
+        'Form 4': 'bg-amber-50 text-amber-800 border-amber-200',
+      };
+      return `<span class="inline-flex px-2 py-0.5 rounded-md text-[11px] font-semibold border ${map[form] || 'bg-slate-100 text-slate-700'}">${form}</span>`;
+    }
+
+    function getCultureBadge(culture) {
+      if (culture === 'Western') {
+        return `<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-semibold bg-indigo-50 text-western border border-indigo-200">Western</span>`;
+      }
+      return `<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-semibold bg-orange-50 text-indic border border-orange-200">Indic</span>`;
+    }
+
+    function getErrorCellClass(val) {
+      if (val > 0) return 'bg-blue-50/90 text-blue-700 font-bold';
+      if (val < 0) return 'bg-red-50/90 text-red-700 font-bold';
+      return 'text-slate-400 font-medium';
+    }
+
+    function renderDatasetTable() {
+      const cols = getVisibleColumns();
+      const rows = getFilteredSortedRows();
+
+      const countEl = document.getElementById('dsRowCount');
+      const sortEl = document.getElementById('dsSortStatus');
+      const legendEl = document.getElementById('dsErrorLegend');
+      if (countEl) countEl.textContent = `Showing ${rows.length} of ${DATASET_ROWS.length} rows`;
+      if (sortEl) sortEl.textContent = `Sorted by: ${dsState.sortKey} (${dsState.sortDir})`;
+      if (legendEl) legendEl.classList.toggle('hidden', dsState.mode !== 'error');
+
+      const thead = document.getElementById('dsTableHead');
+      if (thead) {
+        thead.innerHTML = `<tr>${cols.map(col => {
+          const isSorted = dsState.sortKey === col.key;
+          const arrow = isSorted ? (dsState.sortDir === 'asc' ? '▲' : '▼') : '⇅';
+          const alignClass = col.align === 'right' ? 'text-right' : (col.align === 'center' ? 'text-center' : 'text-left');
+          const groupTint = col.group === 'human'
+            ? 'bg-teal-50/70 text-teal-900'
+            : (col.group === 'llm' ? 'bg-indigo-50/70 text-western' : (col.group === 'error' ? 'bg-amber-50/70 text-amber-950' : 'bg-slate-100 text-slate-700'));
+          return `
+            <th data-sort="${col.key}" class="ds-sort-th cursor-pointer select-none py-3 px-3 font-bold ${alignClass} ${groupTint} hover:brightness-95 transition">
+              <span class="inline-flex items-center gap-1">${col.label}<span class="text-[10px] ${isSorted ? 'text-slate-900' : 'text-slate-400'}">${arrow}</span></span>
+            </th>
+          `;
+        }).join('')}</tr>`;
+
+        thead.querySelectorAll('.ds-sort-th').forEach(th => {
+          th.addEventListener('click', () => {
+            const key = th.dataset.sort;
+            if (dsState.sortKey === key) {
+              dsState.sortDir = dsState.sortDir === 'asc' ? 'desc' : 'asc';
+            } else {
+              dsState.sortKey = key;
+              dsState.sortDir = 'asc';
+            }
+            renderDatasetTable();
+          });
+        });
+      }
+
+      const tbody = document.getElementById('dsTableBody');
+      if (!tbody) return;
+      if (rows.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="${cols.length}" class="py-10 text-center text-sm text-slate-500">No matching rows found. Try adjusting or resetting your filters.</td></tr>`;
+        return;
+      }
+
+      tbody.innerHTML = rows.map(row => `
+        <tr class="hover:bg-slate-50/90 transition-colors">
+          ${cols.map(col => {
+            const val = row[col.key];
+            if (col.key === 'rater_id') return `<td class="py-2.5 px-3 font-bold text-slate-900">${val}</td>`;
+            if (col.key === 'form') return `<td class="py-2.5 px-3">${getFormBadge(val)}</td>`;
+            if (col.key === 'culture') return `<td class="py-2.5 px-3">${getCultureBadge(val)}</td>`;
+            if (col.key === 'agent_role') {
+              const roleLabel = val === 'A' ? 'A (Buyer)' : 'B (Seller)';
+              return `<td class="py-2.5 px-3 text-center"><span class="px-2 py-0.5 rounded-md text-[11px] font-medium bg-slate-100 text-slate-700">${roleLabel}</span></td>`;
+            }
+            if (col.key === 'item_id') return `<td class="py-2.5 px-3 font-mono text-xs text-slate-700">${val}</td>`;
+            if (col.group === 'error') {
+              const formatted = val > 0 ? `+${val}` : `${val}`;
+              return `<td class="py-2.5 px-3 text-right tabular-nums ${getErrorCellClass(val)}">${formatted}</td>`;
+            }
+            if (col.group === 'human') return `<td class="py-2.5 px-3 text-right tabular-nums text-slate-800 bg-teal-50/20">${val}</td>`;
+            if (col.group === 'llm') return `<td class="py-2.5 px-3 text-right tabular-nums font-medium text-western bg-indigo-50/20">${val}</td>`;
+            return `<td class="py-2.5 px-3 text-right tabular-nums text-slate-600">${val}</td>`;
+          }).join('')}
+        </tr>
+      `).join('');
+    }
+
+    function exportFilteredCsv() {
+      const rows = getFilteredSortedRows();
+      const csvLines = [CSV_HEADERS.join(',')];
+      rows.forEach(r => {
+        csvLines.push(CSV_HEADERS.map(h => r[h]).join(','));
+      });
+      const blob = new Blob([csvLines.join('\n')], { type: 'text/csv;charset=utf-8;' });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `sotopia_indic_phase1_filtered_${rows.length}rows.csv`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+    }
+
+    function initDatasetExplorer() {
+      const searchEl = document.getElementById('dsSearch');
+      const formEl = document.getElementById('dsFormFilter');
+      const cultureEl = document.getElementById('dsCultureFilter');
+      const roleEl = document.getElementById('dsRoleFilter');
+      const resetBtn = document.getElementById('dsResetBtn');
+      const exportBtn = document.getElementById('dsExportBtn');
+      const modeBtns = document.querySelectorAll('.ds-mode-btn');
+
+      if (searchEl) searchEl.addEventListener('input', (e) => { dsState.search = e.target.value; renderDatasetTable(); });
+      if (formEl) formEl.addEventListener('change', (e) => { dsState.form = e.target.value; renderDatasetTable(); });
+      if (cultureEl) cultureEl.addEventListener('change', (e) => { dsState.culture = e.target.value; renderDatasetTable(); });
+      if (roleEl) roleEl.addEventListener('change', (e) => { dsState.role = e.target.value; renderDatasetTable(); });
+
+      modeBtns.forEach(btn => {
+        btn.addEventListener('click', () => {
+          dsState.mode = btn.dataset.mode;
+          const visibleKeys = getVisibleColumns().map(c => c.key);
+          if (!visibleKeys.includes(dsState.sortKey)) {
+            dsState.sortKey = 'rater_id';
+            dsState.sortDir = 'asc';
+          }
+          modeBtns.forEach(b => {
+            const active = b.dataset.mode === dsState.mode;
+            b.classList.toggle('bg-western', active);
+            b.classList.toggle('text-white', active);
+            b.classList.toggle('shadow-sm', active);
+            b.classList.toggle('bg-slate-100', !active);
+            b.classList.toggle('text-slate-700', !active);
+            b.classList.toggle('hover:bg-slate-200', !active);
+          });
+          renderDatasetTable();
+        });
+      });
+
+      if (resetBtn) {
+        resetBtn.addEventListener('click', () => {
+          dsState.search = '';
+          dsState.form = 'ALL';
+          dsState.culture = 'ALL';
+          dsState.role = 'ALL';
+          dsState.sortKey = 'rater_id';
+          dsState.sortDir = 'asc';
+          if (searchEl) searchEl.value = '';
+          if (formEl) formEl.value = 'ALL';
+          if (cultureEl) cultureEl.value = 'ALL';
+          if (roleEl) roleEl.value = 'ALL';
+          renderDatasetTable();
+        });
+      }
+
+      if (exportBtn) exportBtn.addEventListener('click', exportFilteredCsv);
+      renderDatasetTable();
+    }
+
+    // ---------------- INITIALIZE ON DOM READY ----------------
+    document.addEventListener('DOMContentLoaded', () => {
+      renderIccTables();
+      initDatasetExplorer();
+      switchTab('tabOverview', true);
+    });
+  </script>
+</body>
+</html>
